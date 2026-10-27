@@ -1,0 +1,1363 @@
+{
+ "adoptions": [
+  {
+   "at": 1792843996.206177,
+   "failures": [],
+   "from": "gemma4:12b",
+   "kind": "adopt",
+   "ok": true,
+   "recreated": [
+    "popote/backend",
+    "paperless/webserver",
+    "paperless/paperless-gpt",
+    "tricouture/app"
+   ],
+   "source": "ui",
+   "to": "qwen3.5:14b"
+  }
+ ],
+ "fit_version": 3,
+ "ignored": {
+  "minicpm-v:8b": "*"
+ },
+ "intrinsic": {
+  "llama4:16x17b@cccc3333": {
+   "at": 1792843948.118521,
+   "reason": "82 % sur le GPU seulement (7,3 Go sur 8,9 Go)"
+  },
+  "mistral-small3.2:24b@dddd4444": {
+   "at": 1792843948.128492,
+   "reason": "ne lit pas les images"
+  }
+ },
+ "last_run": 1792843948.141275,
+ "recommendation": {
+  "at": 1792843948.1369412,
+  "delta": 26.4,
+  "digest": "bbbb2222",
+  "incumbent": "gemma4:12b",
+  "incumbent_total": 51.1,
+  "model": "qwen3.5:14b",
+  "run": "20261024-121222",
+  "status": "adopted",
+  "total": 77.5
+ },
+ "results": {
+  "gemma4:12b-it-qat@eeee5555": {
+   "apps": {
+    "paperless": {
+     "app": "paperless",
+     "cases_hash": "93cd593d9f571619",
+     "eval_tokens_per_s": 45.0,
+     "model": "gemma4:12b-it-qat",
+     "tasks": {
+      "metadata": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "3 document(s) de Paperless",
+        "doc-1 : 50 — titre « Document » (30%); étiquettes ['energie'] (50%); correspondant «  » (0%)",
+        "doc-6 : 58 — titre « Document » (11%); correspondant «  » (0%)",
+        "doc-2 : 62 — titre « Document » (28%); correspondant «  » (0%)"
+       ],
+       "score": 56.5
+      },
+      "ocr": {
+       "avg_seconds": 0.09,
+       "failed": 0,
+       "n": 1,
+       "notes": [
+        "1 document(s) de Paperless",
+        "ocr-6 : 28 — ressemblance 28 %"
+       ],
+       "score": 28.0
+      }
+     }
+    },
+    "popote": {
+     "app": "popote",
+     "cases_hash": "5593f7be6a2437fd",
+     "eval_tokens_per_s": 45.0,
+     "model": "gemma4:12b-it-qat",
+     "tasks": {
+      "description": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 4,
+       "notes": [
+        "4 recette(s) de la base",
+        "description-fe3c484e : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+        "description-722aea78 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+        "description-7b1add85 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+        "description-01063d44 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)"
+       ],
+       "score": 49.4
+      },
+      "extraction": {
+       "avg_seconds": 0.01,
+       "failed": 0,
+       "n": 4,
+       "notes": [
+        "4 recette(s) de la base",
+        "recette-722aea78 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+        "recette-7b1add85 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+        "recette-01063d44 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+        "recette-fe3c484e : 78 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); catégorie 'snack', attendu 'dessert' (0%)"
+       ],
+       "score": 74.5
+      },
+      "nutrition": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "3 recette(s) de la base",
+        "nutrition-722aea78 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+        "nutrition-01063d44 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+        "nutrition-44b20197 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)"
+       ],
+       "score": 60.5
+      },
+      "photo_recipe": {
+       "avg_seconds": 0.01,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "photos fournies (les photos envoyées ne sont pas conservées par Popote)",
+        "photo-veloute-capture : 68 — ingrédients retrouvés 3/7 (43%); 0 étapes, attendu 3-5 (25%); portions None, attendu 4 (0%)",
+        "photo-crepes-manuscrite : 68 — ingrédients retrouvés 3/6 (50%); 0 étapes, attendu 3-6 (25%); portions None, attendu 4 (0%)",
+        "photo-gratin-livre : 70 — ingrédients retrouvés 4/8 (50%); 0 étapes, attendu 3-6 (25%); portions None, attendu 6 (0%)"
+       ],
+       "score": 68.6
+      }
+     }
+    },
+    "tricouture": {
+     "app": "tricouture",
+     "cases_hash": "b02c55f83bd1acb5",
+     "eval_tokens_per_s": 45,
+     "model": "gemma4:12b-it-qat",
+     "tasks": {
+      "label": {
+       "avg_seconds": 0.02,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "label-coton : 25 — brand « Filature des Monts », attendu « Atelier Lin » (0 %); name « Mérinos Douceur », attendu « Coton Bio Été » (0 %); colorway « Rouille 052 », attendu « Écume 12 » (0 %)",
+        "label-3911294b : 88 — grosseur worsted, attendu dk (0 %)",
+        "label-merinos : 90 — grosseur worsted, attendu dk (0 %)"
+       ],
+       "score": 67.4
+      },
+      "pattern_info": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "info-socks-en : 33 — garmentType « Pull », attendu « Chaussettes » (0 %); designer « Atelier Test », attendu « Fern Atkinson » (0 %); sizes « S-XL », attendu « S-L » (63 %)",
+        "info-pull-fr : 76 — designer « Atelier Test », attendu « Laine & Lune » (0 %); sizes « S-XL », attendu « XS-XL » (75 %); langue en, attendu fr (0 %)",
+        "info-10000000 : 82 — designer « Atelier Test », attendu « Laine & Lune » (0 %)"
+       ],
+       "score": 63.7
+      },
+      "pieces": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "couture-jupe : 44 — pièces retrouvées 2/5 (40 %); 2 pièces, attendu 3-8 (75 %); rangs et quantités (0 %)",
+        "tricot-pull : 61 — pièces retrouvées 2/4 (50 %); 2 pièces, attendu 3-7 (75 %); rangs et quantités (50 %)",
+        "pieces-10000000 : 77 — pièces retrouvées 2/3 (67 %); rangs et quantités (67 %)"
+       ],
+       "score": 60.8
+      },
+      "translation": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "translate-10000000 : 0 — nombres conservés 0/35 (0 %); termes traduits 0/4 (manque CO, BO, inc, st(s)) (0 %); écrit en français (0 %)",
+        "translate-shawl : 0 — nombres conservés 0/19 (0 %); termes traduits 0/7 (manque k2tog/p2tog, ssk, yo, BO, RS, WS, st(s)) (0 %); écrit en français (0 %)",
+        "translate-hat : 2 — nombres conservés 1/17 (6 %); termes traduits 0/4 (manque k2tog/p2tog, CO, rnd, st(s)) (0 %); écrit en français (0 %)"
+       ],
+       "score": 0.7
+      }
+     }
+    }
+   },
+   "capabilities": [
+    "completion",
+    "vision"
+   ],
+   "case_hash": "ad54eeb7a83ab68a",
+   "compare": {
+    "apps": {
+     "paperless": {
+      "delta": 0.0,
+      "incumbent": 42.2,
+      "score": 42.2
+     },
+     "popote": {
+      "delta": 0.3,
+      "incumbent": 62.9,
+      "score": 63.2
+     },
+     "tricouture": {
+      "delta": 0.0,
+      "incumbent": 48.1,
+      "score": 48.1
+     }
+    },
+    "delta": 0.1,
+    "incumbent_total": 51.1,
+    "tasks": {
+     "paperless/metadata": 0.0,
+     "paperless/ocr": 0.0,
+     "popote/description": 0.0,
+     "popote/extraction": 0.0,
+     "popote/nutrition": 0.0,
+     "popote/photo_recipe": 1.4,
+     "tricouture/label": 0.0,
+     "tricouture/pattern_info": 0.0,
+     "tricouture/pieces": 0.0,
+     "tricouture/translation": 0.0
+    },
+    "total": 51.2
+   },
+   "digest": "eeee5555",
+   "evaluated_at": 1792843945.742332,
+   "fit": {
+    "gpu_pct": 100.0,
+    "load_s": 3.1,
+    "size": 8581344656,
+    "size_gb": 7.99,
+    "size_vram": 8581344656,
+    "vram_gb": 7.99
+   },
+   "model": "gemma4:12b-it-qat",
+   "reason": "gain +0,1 pts, il en faut 5",
+   "size": 7945689497,
+   "speed": {
+    "tokens": 256,
+    "tokens_per_s": 45.0
+   },
+   "total": 51.2,
+   "verdict": "rejeté"
+  },
+  "gemma4:12b@aaaa1111": {
+   "apps": {
+    "paperless": {
+     "app": "paperless",
+     "cases_hash": "93cd593d9f571619",
+     "eval_tokens_per_s": 40.0,
+     "model": "gemma4:12b",
+     "tasks": {
+      "metadata": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "3 document(s) de Paperless",
+        "doc-1 : 50 — titre « Document » (30%); étiquettes ['energie'] (50%); correspondant «  » (0%)",
+        "doc-6 : 58 — titre « Document » (11%); correspondant «  » (0%)",
+        "doc-2 : 62 — titre « Document » (28%); correspondant «  » (0%)"
+       ],
+       "score": 56.5
+      },
+      "ocr": {
+       "avg_seconds": 0.1,
+       "failed": 0,
+       "n": 1,
+       "notes": [
+        "1 document(s) de Paperless",
+        "ocr-6 : 28 — ressemblance 28 %"
+       ],
+       "score": 28.0
+      }
+     }
+    },
+    "popote": {
+     "app": "popote",
+     "cases_hash": "5593f7be6a2437fd",
+     "eval_tokens_per_s": 40.0,
+     "model": "gemma4:12b",
+     "tasks": {
+      "description": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 4,
+       "notes": [
+        "4 recette(s) de la base",
+        "description-fe3c484e : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+        "description-722aea78 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+        "description-7b1add85 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+        "description-01063d44 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)"
+       ],
+       "score": 49.4
+      },
+      "extraction": {
+       "avg_seconds": 0.01,
+       "failed": 0,
+       "n": 4,
+       "notes": [
+        "4 recette(s) de la base",
+        "recette-722aea78 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+        "recette-7b1add85 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+        "recette-01063d44 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+        "recette-fe3c484e : 78 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); catégorie 'snack', attendu 'dessert' (0%)"
+       ],
+       "score": 74.5
+      },
+      "nutrition": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "3 recette(s) de la base",
+        "nutrition-722aea78 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+        "nutrition-01063d44 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+        "nutrition-44b20197 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)"
+       ],
+       "score": 60.5
+      },
+      "photo_recipe": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "photos fournies (les photos envoyées ne sont pas conservées par Popote)",
+        "photo-gratin-livre : 66 — ingrédients retrouvés 3/8 (38%); 0 étapes, attendu 3-6 (25%); portions None, attendu 6 (0%)",
+        "photo-veloute-capture : 68 — ingrédients retrouvés 3/7 (43%); 0 étapes, attendu 3-5 (25%); portions None, attendu 4 (0%)",
+        "photo-crepes-manuscrite : 68 — ingrédients retrouvés 3/6 (50%); 0 étapes, attendu 3-6 (25%); portions None, attendu 4 (0%)"
+       ],
+       "score": 67.2
+      }
+     }
+    },
+    "tricouture": {
+     "app": "tricouture",
+     "cases_hash": "b02c55f83bd1acb5",
+     "eval_tokens_per_s": 40,
+     "model": "gemma4:12b",
+     "tasks": {
+      "label": {
+       "avg_seconds": 0.02,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "label-coton : 25 — brand « Filature des Monts », attendu « Atelier Lin » (0 %); name « Mérinos Douceur », attendu « Coton Bio Été » (0 %); colorway « Rouille 052 », attendu « Écume 12 » (0 %)",
+        "label-3911294b : 88 — grosseur worsted, attendu dk (0 %)",
+        "label-merinos : 90 — grosseur worsted, attendu dk (0 %)"
+       ],
+       "score": 67.4
+      },
+      "pattern_info": {
+       "avg_seconds": 0.01,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "info-socks-en : 33 — garmentType « Pull », attendu « Chaussettes » (0 %); designer « Atelier Test », attendu « Fern Atkinson » (0 %); sizes « S-XL », attendu « S-L » (63 %)",
+        "info-pull-fr : 76 — designer « Atelier Test », attendu « Laine & Lune » (0 %); sizes « S-XL », attendu « XS-XL » (75 %); langue en, attendu fr (0 %)",
+        "info-10000000 : 82 — designer « Atelier Test », attendu « Laine & Lune » (0 %)"
+       ],
+       "score": 63.7
+      },
+      "pieces": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "couture-jupe : 44 — pièces retrouvées 2/5 (40 %); 2 pièces, attendu 3-8 (75 %); rangs et quantités (0 %)",
+        "tricot-pull : 61 — pièces retrouvées 2/4 (50 %); 2 pièces, attendu 3-7 (75 %); rangs et quantités (50 %)",
+        "pieces-10000000 : 77 — pièces retrouvées 2/3 (67 %); rangs et quantités (67 %)"
+       ],
+       "score": 60.8
+      },
+      "translation": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "translate-10000000 : 0 — nombres conservés 0/35 (0 %); termes traduits 0/4 (manque CO, BO, inc, st(s)) (0 %); écrit en français (0 %)",
+        "translate-shawl : 0 — nombres conservés 0/19 (0 %); termes traduits 0/7 (manque k2tog/p2tog, ssk, yo, BO, RS, WS, st(s)) (0 %); écrit en français (0 %)",
+        "translate-hat : 2 — nombres conservés 1/17 (6 %); termes traduits 0/4 (manque k2tog/p2tog, CO, rnd, st(s)) (0 %); écrit en français (0 %)"
+       ],
+       "score": 0.7
+      }
+     }
+    }
+   },
+   "capabilities": [
+    "completion",
+    "vision",
+    "tools"
+   ],
+   "case_hash": "ad54eeb7a83ab68a",
+   "digest": "aaaa1111",
+   "evaluated_at": 1792843944.4940665,
+   "fit": {
+    "gpu_pct": 100.0,
+    "load_s": 3.1,
+    "size": 9393093475,
+    "size_gb": 8.75,
+    "size_vram": 9393093475,
+    "vram_gb": 8.75
+   },
+   "model": "gemma4:12b",
+   "reason": "",
+   "size": null,
+   "speed": {
+    "tokens": 256,
+    "tokens_per_s": 40.0
+   },
+   "total": 51.1,
+   "verdict": "en place"
+  },
+  "llama4:16x17b@cccc3333": {
+   "apps": {},
+   "capabilities": [
+    "completion",
+    "vision"
+   ],
+   "case_hash": "ad54eeb7a83ab68a",
+   "compare": null,
+   "digest": "cccc3333",
+   "evaluated_at": 1792843948.1137943,
+   "fit": {
+    "gpu_pct": 82.0,
+    "load_s": 3.1,
+    "size": 9509057592,
+    "size_gb": 8.86,
+    "size_vram": 7797427225,
+    "vram_gb": 7.26
+   },
+   "intrinsic": true,
+   "model": "llama4:16x17b",
+   "reason": "82 % sur le GPU seulement (7,3 Go sur 8,9 Go)",
+   "size": 8804682956,
+   "verdict": "rejeté"
+  },
+  "mistral-small3.2:24b@dddd4444": {
+   "apps": {},
+   "capabilities": [
+    "completion",
+    "tools"
+   ],
+   "case_hash": "ad54eeb7a83ab68a",
+   "compare": null,
+   "digest": "dddd4444",
+   "evaluated_at": 1792843948.1257422,
+   "intrinsic": true,
+   "model": "mistral-small3.2:24b",
+   "reason": "ne lit pas les images",
+   "size": 8589934592,
+   "verdict": "rejeté"
+  },
+  "qwen3.5:14b@bbbb2222": {
+   "apps": {
+    "paperless": {
+     "app": "paperless",
+     "cases_hash": "93cd593d9f571619",
+     "eval_tokens_per_s": 35.0,
+     "model": "qwen3.5:14b",
+     "tasks": {
+      "metadata": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "3 document(s) de Paperless"
+       ],
+       "score": 100.0
+      },
+      "ocr": {
+       "avg_seconds": 0.1,
+       "failed": 0,
+       "n": 1,
+       "notes": [
+        "1 document(s) de Paperless",
+        "ocr-6 : 54 — ressemblance 54 %"
+       ],
+       "score": 54.2
+      }
+     }
+    },
+    "popote": {
+     "app": "popote",
+     "cases_hash": "5593f7be6a2437fd",
+     "eval_tokens_per_s": 35.0,
+     "model": "qwen3.5:14b",
+     "tasks": {
+      "description": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 4,
+       "notes": [
+        "4 recette(s) de la base"
+       ],
+       "score": 100.0
+      },
+      "extraction": {
+       "avg_seconds": 0.01,
+       "failed": 0,
+       "n": 4,
+       "notes": [
+        "4 recette(s) de la base",
+        "recette-722aea78 : 90 — durées (0%); catégorie 'plat', attendu 'dessert' (0%)",
+        "recette-7b1add85 : 90 — durées (0%); catégorie 'plat', attendu 'dessert' (0%)",
+        "recette-01063d44 : 90 — durées (0%); catégorie 'plat', attendu 'dessert' (0%)",
+        "recette-fe3c484e : 95 — catégorie 'plat', attendu 'dessert' (0%)"
+       ],
+       "score": 91.2
+      },
+      "nutrition": {
+       "avg_seconds": 0.0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "3 recette(s) de la base",
+        "nutrition-722aea78 : 70 — calories 298, référence 380 (85%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+        "nutrition-01063d44 : 70 — calories 298, référence 380 (85%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+        "nutrition-44b20197 : 70 — calories 298, référence 380 (85%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)"
+       ],
+       "score": 69.6
+      },
+      "photo_recipe": {
+       "avg_seconds": 0.01,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "photos fournies (les photos envoyées ne sont pas conservées par Popote)",
+        "photo-crepes-manuscrite : 92 — 0 étapes, attendu 3-6 (25%)",
+        "photo-gratin-livre : 92 — 0 étapes, attendu 3-6 (25%)",
+        "photo-veloute-capture : 92 — 0 étapes, attendu 3-5 (25%)"
+       ],
+       "score": 92.4
+      }
+     }
+    },
+    "tricouture": {
+     "app": "tricouture",
+     "cases_hash": "b02c55f83bd1acb5",
+     "eval_tokens_per_s": 35,
+     "model": "qwen3.5:14b",
+     "tasks": {
+      "label": {
+       "avg_seconds": 0.02,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "label-coton : 25 — brand « Filature des Monts », attendu « Atelier Lin » (0 %); name « Mérinos Douceur », attendu « Coton Bio Été » (0 %); colorway « Rouille 052 », attendu « Écume 12 » (0 %)"
+       ],
+       "score": 74.9
+      },
+      "pattern_info": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "info-socks-en : 33 — garmentType « Pull », attendu « Chaussettes » (0 %); designer « Atelier Test », attendu « Fern Atkinson » (0 %); sizes « S-XL », attendu « S-L » (63 %)",
+        "info-pull-fr : 76 — designer « Atelier Test », attendu « Laine & Lune » (0 %); sizes « S-XL », attendu « XS-XL » (75 %); langue en, attendu fr (0 %)",
+        "info-10000000 : 82 — designer « Atelier Test », attendu « Laine & Lune » (0 %)"
+       ],
+       "score": 63.7
+      },
+      "pieces": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "couture-jupe : 48 — pièces retrouvées 2/5 (40 %); rangs et quantités (0 %)",
+        "tricot-pull : 94 — rangs et quantités (75 %)"
+       ],
+       "score": 80.6
+      },
+      "translation": {
+       "avg_seconds": 0,
+       "failed": 0,
+       "n": 3,
+       "notes": [
+        "1 cas de la base + 2 cas fourni(s)",
+        "translate-10000000 : 41 — nombres conservés 3/35 (9 %); termes traduits 2/4 (manque BO, inc) (50 %); longueur 14 % de l'original (0 %)",
+        "translate-shawl : 51 — nombres conservés 3/19 (16 %); termes traduits 5/7 (manque BO, WS) (71 %); longueur 39 % de l'original (0 %)",
+        "translate-hat : 57 — nombres conservés 5/17 (29 %); termes traduits 3/4 (manque rnd) (75 %); longueur 26 % de l'original (0 %)"
+       ],
+       "score": 49.2
+      }
+     }
+    }
+   },
+   "capabilities": [
+    "completion",
+    "vision",
+    "tools",
+    "thinking"
+   ],
+   "case_hash": "ad54eeb7a83ab68a",
+   "compare": {
+    "apps": {
+     "paperless": {
+      "delta": 34.9,
+      "incumbent": 42.2,
+      "score": 77.1
+     },
+     "popote": {
+      "delta": 25.4,
+      "incumbent": 62.9,
+      "score": 88.3
+     },
+     "tricouture": {
+      "delta": 19.0,
+      "incumbent": 48.1,
+      "score": 67.1
+     }
+    },
+    "delta": 26.4,
+    "incumbent_total": 51.1,
+    "tasks": {
+     "paperless/metadata": 43.5,
+     "paperless/ocr": 26.2,
+     "popote/description": 50.6,
+     "popote/extraction": 16.7,
+     "popote/nutrition": 9.1,
+     "popote/photo_recipe": 25.2,
+     "tricouture/label": 7.5,
+     "tricouture/pattern_info": 0.0,
+     "tricouture/pieces": 19.8,
+     "tricouture/translation": 48.5
+    },
+    "total": 77.5
+   },
+   "digest": "bbbb2222",
+   "evaluated_at": 1792843946.9814792,
+   "fit": {
+    "gpu_pct": 100.0,
+    "load_s": 3.1,
+    "size": 9625021710,
+    "size_gb": 8.96,
+    "size_vram": 9625021710,
+    "vram_gb": 8.96
+   },
+   "model": "qwen3.5:14b",
+   "reason": "+26,4 pts au total",
+   "size": 8912057139,
+   "speed": {
+    "tokens": 256,
+    "tokens_per_s": 35.0
+   },
+   "total": 77.5,
+   "verdict": "recommandé"
+  }
+ },
+ "runs": [
+  {
+   "candidates": [
+    {
+     "apps": {
+      "paperless": {
+       "eval_tokens_per_s": 45.0,
+       "tasks": {
+        "metadata": {
+         "avg_seconds": 0.0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "3 document(s) de Paperless",
+          "doc-1 : 50 — titre « Document » (30%); étiquettes ['energie'] (50%); correspondant «  » (0%)",
+          "doc-6 : 58 — titre « Document » (11%); correspondant «  » (0%)",
+          "doc-2 : 62 — titre « Document » (28%); correspondant «  » (0%)"
+         ],
+         "score": 56.5
+        },
+        "ocr": {
+         "avg_seconds": 0.09,
+         "failed": 0,
+         "n": 1,
+         "notes": [
+          "1 document(s) de Paperless",
+          "ocr-6 : 28 — ressemblance 28 %"
+         ],
+         "score": 28.0
+        }
+       }
+      },
+      "popote": {
+       "eval_tokens_per_s": 45.0,
+       "tasks": {
+        "description": {
+         "avg_seconds": 0.0,
+         "failed": 0,
+         "n": 4,
+         "notes": [
+          "4 recette(s) de la base",
+          "description-fe3c484e : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+          "description-722aea78 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+          "description-7b1add85 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+          "description-01063d44 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)"
+         ],
+         "score": 49.4
+        },
+        "extraction": {
+         "avg_seconds": 0.01,
+         "failed": 0,
+         "n": 4,
+         "notes": [
+          "4 recette(s) de la base",
+          "recette-722aea78 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+          "recette-7b1add85 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+          "recette-01063d44 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+          "recette-fe3c484e : 78 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); catégorie 'snack', attendu 'dessert' (0%)"
+         ],
+         "score": 74.5
+        },
+        "nutrition": {
+         "avg_seconds": 0.0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "3 recette(s) de la base",
+          "nutrition-722aea78 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+          "nutrition-01063d44 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+          "nutrition-44b20197 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)"
+         ],
+         "score": 60.5
+        },
+        "photo_recipe": {
+         "avg_seconds": 0.01,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "photos fournies (les photos envoyées ne sont pas conservées par Popote)",
+          "photo-veloute-capture : 68 — ingrédients retrouvés 3/7 (43%); 0 étapes, attendu 3-5 (25%); portions None, attendu 4 (0%)",
+          "photo-crepes-manuscrite : 68 — ingrédients retrouvés 3/6 (50%); 0 étapes, attendu 3-6 (25%); portions None, attendu 4 (0%)",
+          "photo-gratin-livre : 70 — ingrédients retrouvés 4/8 (50%); 0 étapes, attendu 3-6 (25%); portions None, attendu 6 (0%)"
+         ],
+         "score": 68.6
+        }
+       }
+      },
+      "tricouture": {
+       "eval_tokens_per_s": 45,
+       "tasks": {
+        "label": {
+         "avg_seconds": 0.02,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "label-coton : 25 — brand « Filature des Monts », attendu « Atelier Lin » (0 %); name « Mérinos Douceur », attendu « Coton Bio Été » (0 %); colorway « Rouille 052 », attendu « Écume 12 » (0 %)",
+          "label-3911294b : 88 — grosseur worsted, attendu dk (0 %)",
+          "label-merinos : 90 — grosseur worsted, attendu dk (0 %)"
+         ],
+         "score": 67.4
+        },
+        "pattern_info": {
+         "avg_seconds": 0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "info-socks-en : 33 — garmentType « Pull », attendu « Chaussettes » (0 %); designer « Atelier Test », attendu « Fern Atkinson » (0 %); sizes « S-XL », attendu « S-L » (63 %)",
+          "info-pull-fr : 76 — designer « Atelier Test », attendu « Laine & Lune » (0 %); sizes « S-XL », attendu « XS-XL » (75 %); langue en, attendu fr (0 %)",
+          "info-10000000 : 82 — designer « Atelier Test », attendu « Laine & Lune » (0 %)"
+         ],
+         "score": 63.7
+        },
+        "pieces": {
+         "avg_seconds": 0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "couture-jupe : 44 — pièces retrouvées 2/5 (40 %); 2 pièces, attendu 3-8 (75 %); rangs et quantités (0 %)",
+          "tricot-pull : 61 — pièces retrouvées 2/4 (50 %); 2 pièces, attendu 3-7 (75 %); rangs et quantités (50 %)",
+          "pieces-10000000 : 77 — pièces retrouvées 2/3 (67 %); rangs et quantités (67 %)"
+         ],
+         "score": 60.8
+        },
+        "translation": {
+         "avg_seconds": 0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "translate-10000000 : 0 — nombres conservés 0/35 (0 %); termes traduits 0/4 (manque CO, BO, inc, st(s)) (0 %); écrit en français (0 %)",
+          "translate-shawl : 0 — nombres conservés 0/19 (0 %); termes traduits 0/7 (manque k2tog/p2tog, ssk, yo, BO, RS, WS, st(s)) (0 %); écrit en français (0 %)",
+          "translate-hat : 2 — nombres conservés 1/17 (6 %); termes traduits 0/4 (manque k2tog/p2tog, CO, rnd, st(s)) (0 %); écrit en français (0 %)"
+         ],
+         "score": 0.7
+        }
+       }
+      }
+     },
+     "capabilities": [
+      "completion",
+      "vision"
+     ],
+     "case_hash": "ad54eeb7a83ab68a",
+     "compare": {
+      "apps": {
+       "paperless": {
+        "delta": 0.0,
+        "incumbent": 42.2,
+        "score": 42.2
+       },
+       "popote": {
+        "delta": 0.3,
+        "incumbent": 62.9,
+        "score": 63.2
+       },
+       "tricouture": {
+        "delta": 0.0,
+        "incumbent": 48.1,
+        "score": 48.1
+       }
+      },
+      "delta": 0.1,
+      "incumbent_total": 51.1,
+      "tasks": {
+       "paperless/metadata": 0.0,
+       "paperless/ocr": 0.0,
+       "popote/description": 0.0,
+       "popote/extraction": 0.0,
+       "popote/nutrition": 0.0,
+       "popote/photo_recipe": 1.4,
+       "tricouture/label": 0.0,
+       "tricouture/pattern_info": 0.0,
+       "tricouture/pieces": 0.0,
+       "tricouture/translation": 0.0
+      },
+      "total": 51.2
+     },
+     "digest": "eeee5555",
+     "evaluated_at": 1792843945.742332,
+     "fit": {
+      "gpu_pct": 100.0,
+      "load_s": 3.1,
+      "size": 8581344656,
+      "size_gb": 7.99,
+      "size_vram": 8581344656,
+      "vram_gb": 7.99
+     },
+     "model": "gemma4:12b-it-qat",
+     "reason": "gain +0,1 pts, il en faut 5",
+     "size": 7945689497,
+     "speed": {
+      "tokens": 256,
+      "tokens_per_s": 45.0
+     },
+     "total": 51.2,
+     "verdict": "rejeté"
+    },
+    {
+     "apps": {
+      "paperless": {
+       "eval_tokens_per_s": 35.0,
+       "tasks": {
+        "metadata": {
+         "avg_seconds": 0.0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "3 document(s) de Paperless"
+         ],
+         "score": 100.0
+        },
+        "ocr": {
+         "avg_seconds": 0.1,
+         "failed": 0,
+         "n": 1,
+         "notes": [
+          "1 document(s) de Paperless",
+          "ocr-6 : 54 — ressemblance 54 %"
+         ],
+         "score": 54.2
+        }
+       }
+      },
+      "popote": {
+       "eval_tokens_per_s": 35.0,
+       "tasks": {
+        "description": {
+         "avg_seconds": 0.0,
+         "failed": 0,
+         "n": 4,
+         "notes": [
+          "4 recette(s) de la base"
+         ],
+         "score": 100.0
+        },
+        "extraction": {
+         "avg_seconds": 0.01,
+         "failed": 0,
+         "n": 4,
+         "notes": [
+          "4 recette(s) de la base",
+          "recette-722aea78 : 90 — durées (0%); catégorie 'plat', attendu 'dessert' (0%)",
+          "recette-7b1add85 : 90 — durées (0%); catégorie 'plat', attendu 'dessert' (0%)",
+          "recette-01063d44 : 90 — durées (0%); catégorie 'plat', attendu 'dessert' (0%)",
+          "recette-fe3c484e : 95 — catégorie 'plat', attendu 'dessert' (0%)"
+         ],
+         "score": 91.2
+        },
+        "nutrition": {
+         "avg_seconds": 0.0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "3 recette(s) de la base",
+          "nutrition-722aea78 : 70 — calories 298, référence 380 (85%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+          "nutrition-01063d44 : 70 — calories 298, référence 380 (85%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+          "nutrition-44b20197 : 70 — calories 298, référence 380 (85%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)"
+         ],
+         "score": 69.6
+        },
+        "photo_recipe": {
+         "avg_seconds": 0.01,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "photos fournies (les photos envoyées ne sont pas conservées par Popote)",
+          "photo-crepes-manuscrite : 92 — 0 étapes, attendu 3-6 (25%)",
+          "photo-gratin-livre : 92 — 0 étapes, attendu 3-6 (25%)",
+          "photo-veloute-capture : 92 — 0 étapes, attendu 3-5 (25%)"
+         ],
+         "score": 92.4
+        }
+       }
+      },
+      "tricouture": {
+       "eval_tokens_per_s": 35,
+       "tasks": {
+        "label": {
+         "avg_seconds": 0.02,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "label-coton : 25 — brand « Filature des Monts », attendu « Atelier Lin » (0 %); name « Mérinos Douceur », attendu « Coton Bio Été » (0 %); colorway « Rouille 052 », attendu « Écume 12 » (0 %)"
+         ],
+         "score": 74.9
+        },
+        "pattern_info": {
+         "avg_seconds": 0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "info-socks-en : 33 — garmentType « Pull », attendu « Chaussettes » (0 %); designer « Atelier Test », attendu « Fern Atkinson » (0 %); sizes « S-XL », attendu « S-L » (63 %)",
+          "info-pull-fr : 76 — designer « Atelier Test », attendu « Laine & Lune » (0 %); sizes « S-XL », attendu « XS-XL » (75 %); langue en, attendu fr (0 %)",
+          "info-10000000 : 82 — designer « Atelier Test », attendu « Laine & Lune » (0 %)"
+         ],
+         "score": 63.7
+        },
+        "pieces": {
+         "avg_seconds": 0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "couture-jupe : 48 — pièces retrouvées 2/5 (40 %); rangs et quantités (0 %)",
+          "tricot-pull : 94 — rangs et quantités (75 %)"
+         ],
+         "score": 80.6
+        },
+        "translation": {
+         "avg_seconds": 0,
+         "failed": 0,
+         "n": 3,
+         "notes": [
+          "1 cas de la base + 2 cas fourni(s)",
+          "translate-10000000 : 41 — nombres conservés 3/35 (9 %); termes traduits 2/4 (manque BO, inc) (50 %); longueur 14 % de l'original (0 %)",
+          "translate-shawl : 51 — nombres conservés 3/19 (16 %); termes traduits 5/7 (manque BO, WS) (71 %); longueur 39 % de l'original (0 %)",
+          "translate-hat : 57 — nombres conservés 5/17 (29 %); termes traduits 3/4 (manque rnd) (75 %); longueur 26 % de l'original (0 %)"
+         ],
+         "score": 49.2
+        }
+       }
+      }
+     },
+     "capabilities": [
+      "completion",
+      "vision",
+      "tools",
+      "thinking"
+     ],
+     "case_hash": "ad54eeb7a83ab68a",
+     "compare": {
+      "apps": {
+       "paperless": {
+        "delta": 34.9,
+        "incumbent": 42.2,
+        "score": 77.1
+       },
+       "popote": {
+        "delta": 25.4,
+        "incumbent": 62.9,
+        "score": 88.3
+       },
+       "tricouture": {
+        "delta": 19.0,
+        "incumbent": 48.1,
+        "score": 67.1
+       }
+      },
+      "delta": 26.4,
+      "incumbent_total": 51.1,
+      "tasks": {
+       "paperless/metadata": 43.5,
+       "paperless/ocr": 26.2,
+       "popote/description": 50.6,
+       "popote/extraction": 16.7,
+       "popote/nutrition": 9.1,
+       "popote/photo_recipe": 25.2,
+       "tricouture/label": 7.5,
+       "tricouture/pattern_info": 0.0,
+       "tricouture/pieces": 19.8,
+       "tricouture/translation": 48.5
+      },
+      "total": 77.5
+     },
+     "digest": "bbbb2222",
+     "evaluated_at": 1792843946.9814792,
+     "fit": {
+      "gpu_pct": 100.0,
+      "load_s": 3.1,
+      "size": 9625021710,
+      "size_gb": 8.96,
+      "size_vram": 9625021710,
+      "vram_gb": 8.96
+     },
+     "model": "qwen3.5:14b",
+     "reason": "+26,4 pts au total",
+     "size": 8912057139,
+     "speed": {
+      "tokens": 256,
+      "tokens_per_s": 35.0
+     },
+     "total": 77.5,
+     "verdict": "recommandé"
+    },
+    {
+     "apps": {},
+     "capabilities": [
+      "completion",
+      "vision"
+     ],
+     "case_hash": "ad54eeb7a83ab68a",
+     "compare": null,
+     "digest": "cccc3333",
+     "evaluated_at": 1792843948.1137943,
+     "fit": {
+      "gpu_pct": 82.0,
+      "load_s": 3.1,
+      "size": 9509057592,
+      "size_gb": 8.86,
+      "size_vram": 7797427225,
+      "vram_gb": 7.26
+     },
+     "model": "llama4:16x17b",
+     "reason": "82 % sur le GPU seulement (7,3 Go sur 8,9 Go)",
+     "size": 8804682956,
+     "speed": null,
+     "total": null,
+     "verdict": "rejeté"
+    },
+    {
+     "apps": {},
+     "capabilities": [
+      "completion",
+      "tools"
+     ],
+     "case_hash": "ad54eeb7a83ab68a",
+     "compare": null,
+     "digest": "dddd4444",
+     "evaluated_at": 1792843948.1257422,
+     "fit": null,
+     "model": "mistral-small3.2:24b",
+     "reason": "ne lit pas les images",
+     "size": 8589934592,
+     "speed": null,
+     "total": null,
+     "verdict": "rejeté"
+    }
+   ],
+   "case_hash": "ad54eeb7a83ab68a",
+   "cases": {
+    "paperless": {
+     "metadata": 3,
+     "ocr": 1
+    },
+    "popote": {
+     "description": 4,
+     "extraction": 4,
+     "nutrition": 3,
+     "photo_recipe": 3
+    },
+    "tricouture": {
+     "label": 3,
+     "pattern_info": 3,
+     "pieces": 3,
+     "translation": 3
+    }
+   },
+   "discovery": {
+    "notes": [],
+    "picked": [
+     {
+      "model": "gemma4:12b-it-qat",
+      "size": 7945689497,
+      "source": "ollama.com",
+      "tier": 0
+     },
+     {
+      "model": "qwen3.5:14b",
+      "size": 8912057139,
+      "source": "ollama.com",
+      "tier": 0
+     },
+     {
+      "model": "llama4:16x17b",
+      "size": 8804682956,
+      "source": "ollama.com",
+      "tier": 0
+     },
+     {
+      "model": "mistral-small3.2:24b",
+      "size": 8589934592,
+      "source": "ollama.com",
+      "tier": 0
+     }
+    ],
+    "seen": []
+   },
+   "divergence": [],
+   "dry": false,
+   "finished": 1792843948.141275,
+   "id": "20261024-121222",
+   "incumbent": "gemma4:12b",
+   "incumbent_key": "gemma4:12b@aaaa1111",
+   "incumbent_result": {
+    "apps": {
+     "paperless": {
+      "eval_tokens_per_s": 40.0,
+      "tasks": {
+       "metadata": {
+        "avg_seconds": 0.0,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "3 document(s) de Paperless",
+         "doc-1 : 50 — titre « Document » (30%); étiquettes ['energie'] (50%); correspondant «  » (0%)",
+         "doc-6 : 58 — titre « Document » (11%); correspondant «  » (0%)",
+         "doc-2 : 62 — titre « Document » (28%); correspondant «  » (0%)"
+        ],
+        "score": 56.5
+       },
+       "ocr": {
+        "avg_seconds": 0.1,
+        "failed": 0,
+        "n": 1,
+        "notes": [
+         "1 document(s) de Paperless",
+         "ocr-6 : 28 — ressemblance 28 %"
+        ],
+        "score": 28.0
+       }
+      }
+     },
+     "popote": {
+      "eval_tokens_per_s": 40.0,
+      "tasks": {
+       "description": {
+        "avg_seconds": 0.0,
+        "failed": 0,
+        "n": 4,
+        "notes": [
+         "4 recette(s) de la base",
+         "description-fe3c484e : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+         "description-722aea78 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+         "description-7b1add85 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)",
+         "description-01063d44 : 49 — 3 mots, attendu 8-45 (38%); en anglais (0%); une seule phrase, sans préambule (0%)"
+        ],
+        "score": 49.4
+       },
+       "extraction": {
+        "avg_seconds": 0.01,
+        "failed": 0,
+        "n": 4,
+        "notes": [
+         "4 recette(s) de la base",
+         "recette-722aea78 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+         "recette-7b1add85 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+         "recette-01063d44 : 73 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); durées (0%)",
+         "recette-fe3c484e : 78 — ingrédients retrouvés 2/3 (67%); portions None, attendu 6 (0%); catégorie 'snack', attendu 'dessert' (0%)"
+        ],
+        "score": 74.5
+       },
+       "nutrition": {
+        "avg_seconds": 0.0,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "3 recette(s) de la base",
+         "nutrition-722aea78 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+         "nutrition-01063d44 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)",
+         "nutrition-44b20197 : 60 — calories 447, référence 380 (94%); proteins 12, référence 4 (0%); carbs 40, référence 48 (96%)"
+        ],
+        "score": 60.5
+       },
+       "photo_recipe": {
+        "avg_seconds": 0.0,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "photos fournies (les photos envoyées ne sont pas conservées par Popote)",
+         "photo-gratin-livre : 66 — ingrédients retrouvés 3/8 (38%); 0 étapes, attendu 3-6 (25%); portions None, attendu 6 (0%)",
+         "photo-veloute-capture : 68 — ingrédients retrouvés 3/7 (43%); 0 étapes, attendu 3-5 (25%); portions None, attendu 4 (0%)",
+         "photo-crepes-manuscrite : 68 — ingrédients retrouvés 3/6 (50%); 0 étapes, attendu 3-6 (25%); portions None, attendu 4 (0%)"
+        ],
+        "score": 67.2
+       }
+      }
+     },
+     "tricouture": {
+      "eval_tokens_per_s": 40,
+      "tasks": {
+       "label": {
+        "avg_seconds": 0.02,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "1 cas de la base + 2 cas fourni(s)",
+         "label-coton : 25 — brand « Filature des Monts », attendu « Atelier Lin » (0 %); name « Mérinos Douceur », attendu « Coton Bio Été » (0 %); colorway « Rouille 052 », attendu « Écume 12 » (0 %)",
+         "label-3911294b : 88 — grosseur worsted, attendu dk (0 %)",
+         "label-merinos : 90 — grosseur worsted, attendu dk (0 %)"
+        ],
+        "score": 67.4
+       },
+       "pattern_info": {
+        "avg_seconds": 0.01,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "1 cas de la base + 2 cas fourni(s)",
+         "info-socks-en : 33 — garmentType « Pull », attendu « Chaussettes » (0 %); designer « Atelier Test », attendu « Fern Atkinson » (0 %); sizes « S-XL », attendu « S-L » (63 %)",
+         "info-pull-fr : 76 — designer « Atelier Test », attendu « Laine & Lune » (0 %); sizes « S-XL », attendu « XS-XL » (75 %); langue en, attendu fr (0 %)",
+         "info-10000000 : 82 — designer « Atelier Test », attendu « Laine & Lune » (0 %)"
+        ],
+        "score": 63.7
+       },
+       "pieces": {
+        "avg_seconds": 0,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "1 cas de la base + 2 cas fourni(s)",
+         "couture-jupe : 44 — pièces retrouvées 2/5 (40 %); 2 pièces, attendu 3-8 (75 %); rangs et quantités (0 %)",
+         "tricot-pull : 61 — pièces retrouvées 2/4 (50 %); 2 pièces, attendu 3-7 (75 %); rangs et quantités (50 %)",
+         "pieces-10000000 : 77 — pièces retrouvées 2/3 (67 %); rangs et quantités (67 %)"
+        ],
+        "score": 60.8
+       },
+       "translation": {
+        "avg_seconds": 0,
+        "failed": 0,
+        "n": 3,
+        "notes": [
+         "1 cas de la base + 2 cas fourni(s)",
+         "translate-10000000 : 0 — nombres conservés 0/35 (0 %); termes traduits 0/4 (manque CO, BO, inc, st(s)) (0 %); écrit en français (0 %)",
+         "translate-shawl : 0 — nombres conservés 0/19 (0 %); termes traduits 0/7 (manque k2tog/p2tog, ssk, yo, BO, RS, WS, st(s)) (0 %); écrit en français (0 %)",
+         "translate-hat : 2 — nombres conservés 1/17 (6 %); termes traduits 0/4 (manque k2tog/p2tog, CO, rnd, st(s)) (0 %); écrit en français (0 %)"
+        ],
+        "score": 0.7
+       }
+      }
+     }
+    },
+    "capabilities": [
+     "completion",
+     "vision",
+     "tools"
+    ],
+    "case_hash": "ad54eeb7a83ab68a",
+    "compare": null,
+    "digest": "aaaa1111",
+    "evaluated_at": 1792843944.4940665,
+    "fit": {
+     "gpu_pct": 100.0,
+     "load_s": 3.1,
+     "size": 9393093475,
+     "size_gb": 8.75,
+     "size_vram": 9393093475,
+     "vram_gb": 8.75
+    },
+    "model": "gemma4:12b",
+    "reason": "",
+    "size": null,
+    "speed": {
+     "tokens": 256,
+     "tokens_per_s": 40.0
+    },
+    "total": 51.1,
+    "verdict": "en place"
+   },
+   "log": [
+    "12:12:22 comptage des cas",
+    "12:12:24 découverte des candidats",
+    "12:12:24 4 candidat(s) : gemma4:12b-it-qat, qwen3.5:14b, llama4:16x17b, mistral-small3.2:24b",
+    "12:12:24 évaluation du modèle en place : gemma4:12b",
+    "12:12:24 mesure de la VRAM : gemma4:12b",
+    "12:12:24 mesure de la vitesse : gemma4:12b",
+    "12:12:24 évaluation Popote : gemma4:12b",
+    "12:12:25 évaluation Paperless : gemma4:12b",
+    "12:12:25 évaluation Tricouture : gemma4:12b",
+    "12:12:25 évaluation : gemma4:12b-it-qat",
+    "12:12:25 téléchargement : gemma4:12b-it-qat",
+    "12:12:25 mesure de la VRAM : gemma4:12b-it-qat",
+    "12:12:25 mesure de la vitesse : gemma4:12b-it-qat",
+    "12:12:25 évaluation Popote : gemma4:12b-it-qat",
+    "12:12:26 évaluation Paperless : gemma4:12b-it-qat",
+    "12:12:26 évaluation Tricouture : gemma4:12b-it-qat",
+    "12:12:26 gemma4:12b-it-qat : rejeté (gain +0,1 pts, il en faut 5)",
+    "12:12:26 gemma4:12b-it-qat supprimé",
+    "12:12:26 évaluation : qwen3.5:14b",
+    "12:12:26 téléchargement : qwen3.5:14b",
+    "12:12:26 mesure de la VRAM : qwen3.5:14b",
+    "12:12:26 mesure de la vitesse : qwen3.5:14b",
+    "12:12:26 évaluation Popote : qwen3.5:14b",
+    "12:12:27 évaluation Paperless : qwen3.5:14b",
+    "12:12:27 évaluation Tricouture : qwen3.5:14b",
+    "12:12:28 qwen3.5:14b : recommandé (+26,4 pts au total)",
+    "12:12:28 évaluation : llama4:16x17b",
+    "12:12:28 téléchargement : llama4:16x17b",
+    "12:12:28 mesure de la VRAM : llama4:16x17b",
+    "12:12:28 llama4:16x17b : rejeté (82 % sur le GPU seulement (7,3 Go sur 8,9 Go))",
+    "12:12:28 llama4:16x17b supprimé",
+    "12:12:28 évaluation : mistral-small3.2:24b",
+    "12:12:28 téléchargement : mistral-small3.2:24b",
+    "12:12:28 mistral-small3.2:24b : rejeté (ne lit pas les images)",
+    "12:12:28 mistral-small3.2:24b supprimé",
+    "12:12:28 qwen3.5:14b recommandé (+26,4 pts)"
+   ],
+   "message": "qwen3.5:14b recommandé (+26,4 pts)",
+   "recommendation": "qwen3.5:14b",
+   "started": 1792843942.1579597,
+   "status": "recommended",
+   "trigger": "manual"
+  }
+ ],
+ "used": {}
+}

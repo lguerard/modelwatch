@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Fake `docker` CLI for the end-to-end test.
+
+Containers come from $E2E_DIR/docker.json: {"<id>": {"labels": {...}, "running": true}}.
+`exec` runs the command locally (with the -e variables); `compose` is only
+logged to $E2E_DIR/compose.log; every call is logged to $E2E_DIR/docker.log.
+"""
+import json
+import os
+import subprocess
+import sys
+
+E2E = os.environ["E2E_DIR"]
+with open(os.path.join(E2E, "docker.json")) as f:
+    CONTAINERS = json.load(f)
+a = sys.argv[1:]
+with open(os.path.join(E2E, "docker.log"), "a") as f:
+    f.write(json.dumps(a[:14]) + "\n")
+
+if a[:1] == ["ps"]:
+    filters = [a[i + 1] for i, x in enumerate(a) if x == "--filter"]
+    out = []
+    for cid, c in CONTAINERS.items():
+        if not c.get("running", True) and "-a" not in a:
+            continue
+        ok = True
+        for flt in filters:
+            kind, value = flt.split("=", 1)
+            if kind == "name":
+                ok &= c.get("name", cid) == value.strip("^$")
+            elif "=" in value:
+                k, v = value.split("=", 1)
+                ok &= c["labels"].get(k) == v
+            else:
+                ok &= value in c["labels"]
+        if ok:
+            out.append(cid)
+    print("\n".join(out))
+    sys.exit(0)
+if a[:1] == ["inspect"]:
+    c = CONTAINERS.get(a[-1])
+    if not c:
+        sys.exit(1)
+    fmt = a[a.index("--format") + 1]
+    print(json.dumps(c["labels"]) if "Labels" in fmt else json.dumps({"Status": "running", "Running": True}))
+    sys.exit(0)
+if a[:1] == ["top"]:
+    print("ARGS\n" + "\n".join(CONTAINERS.get(a[1], {}).get("processes", ["sleep infinity"])))
+    sys.exit(0)
+if a[:1] == ["compose"]:
+    with open(os.path.join(E2E, "compose.log"), "a") as f:
+        f.write(json.dumps({"args": a, "cwd": os.getcwd()}) + "\n")
+    sys.exit(0)
+if a[:1] == ["exec"]:
+    rest, env, i = a[1:], dict(os.environ), 0
+    while rest[i].startswith("-"):
+        if rest[i] in ("-e", "-w"):
+            if rest[i] == "-e":
+                k, v = rest[i + 1].split("=", 1)
+                env[k] = v
+            i += 2
+        else:
+            i += 1
+    cid, cmd = rest[i], rest[i + 1:]
+    if cid not in CONTAINERS:
+        print(f"Error: No such container: {cid}", file=sys.stderr)
+        sys.exit(1)
+    if cmd[:1] == ["nvidia-smi"]:
+        print(CONTAINERS[cid].get("nvidia_smi", "1500, 10240"))
+        sys.exit(0)
+    sys.exit(subprocess.run(cmd, env=env, stdin=sys.stdin).returncode)
+print(f"fake docker: unsupported {a}", file=sys.stderr)
+sys.exit(1)
