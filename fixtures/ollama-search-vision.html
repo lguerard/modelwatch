@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- Extrait reconstitué de https://ollama.com/search?c=vision&o=newest
+     (structure des cartes : élément li x-test-model, x-test-capability, x-test-size).
+     Sert au --selftest : si ollama.com change sa page, mettre ce fichier à jour. -->
+<html class="h-full overflow-y-scroll"><head><title>Ollama Search</title></head>
+<body class="antialiased min-h-screen w-full m-0 flex flex-col">
+<header class="sticky top-0 z-40"><nav><a href="/">Ollama</a><a href="/library">Models</a><a href="/library/gemma4">gemma4</a></nav></header>
+<main class="flex-grow mx-auto w-full px-6">
+<div id="searchresults">
+<ul role="list" class="grid grid-cols-1 gap-y-3">
+  <li x-test-model class="flex items-baseline border-b border-neutral-200 py-6">
+    <a href="/library/qwen3.5" class="group w-full">
+      <div class="flex flex-col mb-1" title="qwen3.5">
+        <h2 class="truncate text-xl font-medium underline-offset-2 group-hover:underline md:text-2xl">
+          <span x-test-search-response-title>qwen3.5</span>
+        </h2>
+        <p class="max-w-lg break-words text-neutral-800 text-md">Qwen 3.5 multimodal models with tools and thinking.</p>
+      </div>
+      <div class="flex flex-col">
+        <div class="flex flex-wrap space-x-2">
+          <span x-test-capability class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-[2px] text-xs sm:text-[13px] font-medium text-indigo-600">vision</span>
+          <span x-test-capability class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-[2px] text-xs sm:text-[13px] font-medium text-indigo-600">tools</span>
+          <span x-test-capability class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-[2px] text-xs sm:text-[13px] font-medium text-indigo-600">thinking</span>
+          <span x-test-size class="inline-flex items-center rounded-md bg-[#ddf4ff] px-2 py-[2px] text-xs sm:text-[13px] font-medium text-blue-600">4b</span>
+          <span x-test-size class="inline-flex items-center rounded-md bg-[#ddf4ff] px-2 py-[2px] text-xs sm:text-[13px] font-medium text-blue-600">14b</span>
+          <span x-test-size class="inline-flex items-center rounded-md bg-[#ddf4ff] px-2 py-[2px] text-xs sm:text-[13px] font-medium text-blue-600">32b</span>
+        </div>
+        <p class="my-1 flex space-x-5 text-[13px] font-medium text-neutral-500">
+          <span class="flex items-center"><span x-test-pull-count>812K</span>&nbsp;<span class="hidden sm:flex">Pulls</span></span>
+          <span class="flex items-center"><span x-test-tag-count>17</span>&nbsp;Tags</span>
+          <span class="flex items-center"><span x-test-updated>3 days ago</span></span>
+        </p>
+      </div>
+    </a>
+  </li>
+  <li x-test-model class="flex items-baseline border-b border-neutral-200 py-6">
+    <a href="/library/llama4" class="group w-full">
+      <div class="flex flex-col mb-1" title="llama4">
+        <h2 class="truncate text-xl font-medium"><span x-test-search-response-title>llama4</span></h2>
+        <p class="max-w-lg break-words text-neutral-800 text-md">Meta's natively multimodal mixture-of-experts models.</p>
+      </div>
+      <div class="flex flex-col">
+        <div class="flex flex-wrap space-x-2">
+          <span x-test-capability class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-[2px] text-xs font-medium text-indigo-600">vision</span>
+          <span x-test-capability class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-[2px] text-xs font-medium text-indigo-600">tools</span>
+          <span x-test-size class="inline-flex items-center rounded-md bg-[#ddf4ff] px-2 py-[2px] text-xs font-medium text-blue-600">16x17b</span>
+          <span x-test-size class="inline-flex items-center rounded-md bg-[#ddf4ff] px-2 py-[2px] text-xs font-medium text-blue-600">128x17b</span>
+        </div>
+      </div>
+    </a>
+  </li>
+  <li x-test-model class="flex items-baseline border-b border-neutral-200 py-6">
+    <a href="/library/gemma4" class="group w-full">
+      <div class="flex flex-col mb-1" title="gemma4"><h2><span x-test-search-response-title>gemma4</span></h2></div>
+      <div class="flex flex-col"><div class="flex flex-wrap space-x-2">
+        <span x-test-capability class="inline-flex">vision</span>
+        <span x-test-size class="inline-flex">e4b</span>
+        <span x-test-size class="inline-flex">12b</span>
+        <span x-test-size class="inline-flex">27b</span>
+      </div></div>
+    </a>
+  </li>
+</ul>
+</div>
+</main>
+<footer><a href="/library/llama3.2">Popular</a></footer>
+</body></html>
