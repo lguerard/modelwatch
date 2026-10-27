@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Lint
+        run: pip install pyflakes && python -m pyflakes modelwatch.py plugins tests
+      - name: Self-test
+        run: python -I modelwatch.py --selftest
+      - name: End-to-end (fake Ollama, registry, ntfy, suites and docker)
+        run: python tests/e2e/run_e2e.py
+      - name: Examples are valid configurations
+        run: |
+          for f in examples/*.yml; do
+            echo "$f"
+            MODELWATCH_CONFIG="$f" MODELWATCH_SECRET=ci python -I modelwatch.py --check-config >/dev/null
+          done
+      - name: Interface script parses
+        run: |
+          node -e "const h=require('fs').readFileSync('ui.html','utf8');
+          new Function(h.slice(h.indexOf('<script>')+8,h.indexOf('</script>')));"

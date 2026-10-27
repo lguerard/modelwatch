@@ -1,0 +1,54 @@
+[changelog]
+header = ""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}\
+### {{ group }}
+
+{% for commit in commits %}\
+- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | split(pat="\n") | first }}
+{% endfor %}
+{% endfor %}\
+{% set contributors = commits | map(attribute="author.name") | unique | sort -%}
+{% if contributors | length > 0 %}
+### 👥 Contributors
+
+{% for name in contributors %}\
+- {{ name }}
+{% endfor %}
+{% endif %}\
+"""
+trim = true
+footer = ""
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+commit_preprocessors = [
+  # Strip leading emoji from the description (after "type(scope): ")
+  { pattern = "(\\w+(?:\\([^)]*\\))?!?:\\s+)[^\\w\\s]+\\s*", replace = "$1" },
+]
+commit_parsers = [
+  # Merge commits are noise in a changelog — the merged commits are already listed.
+  # Anchored to the message start so a commit that merely mentions "merge dev
+  # ... main" in its own text isn't swept up too.
+  { message = "^Merge ", skip = true },
+  { message = "(?i)^chore:\\s*merge dev.*main", skip = true },
+  { message = "^feat", group = "✨ Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^refactor", group = "♻️ Refactoring" },
+  { message = "^docs", group = "📝 Documentation" },
+  { message = "^test", group = "✅ Tests" },
+  { message = "^build", group = "🏗️ Build" },
+  { message = "^ci", group = "👷 CI" },
+  { message = "^revert", group = "⏪ Reverts" },
+  { message = "^chore\\(version\\)|^chore: bump version", skip = true },
+  { message = "^chore", group = "🔧 Chores" },
+  { message = "^wip", skip = true },
+  { message = "^style", skip = true },
+  { message = ".*", group = "🔄 Other" },
+]
+filter_commits = true
+tag_pattern = "v[0-9].*"
+sort_commits = "oldest"
