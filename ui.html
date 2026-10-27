@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en" data-lang="__MW_LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>modelwatch</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M9 21l4-6 4 3 6-9' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --panel-2: #fafbfc; --line: #e7e9ee; --line-2: #eff1f4;
+  --text: #121620; --muted: #687080; --faint: #a1a7b3;
+  --accent: #0d9488; --accent-soft: #e6f6f4; --accent-ink: #ffffff;
+  --ok: #15a34a; --ok-soft: #e8f7ee; --warn: #c2700a; --warn-soft: #fdf3e3;
+  --bad: #d92d2d; --bad-soft: #fdecec; --info: #2563eb; --info-soft: #e9f0fe;
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d12; --panel: #12151c; --panel-2: #151922; --line: #222734; --line-2: #1a1e28;
+    --text: #e8eaf0; --muted: #949bab; --faint: #5e6575;
+    --accent: #2dd4bf; --accent-soft: #0f2a28; --accent-ink: #0b0d12;
+    --ok: #34d17a; --ok-soft: #10261a; --warn: #f2a33a; --warn-soft: #2a1f0d;
+    --bad: #f47272; --bad-soft: #2c1414; --info: #6ea8ff; --info-soft: #121f36;
+    --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { overflow-x: hidden; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+button { font: inherit; color: inherit; }
+.wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+
+header {
+  position: sticky; top: 0; z-index: 5;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--line-2);
+}
+.bar { display: flex; align-items: center; gap: 12px; height: 60px; }
+.logo { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.logo svg { width: 18px; height: 18px; stroke: var(--accent-ink); }
+.title { min-width: 0; flex: 1; }
+.title b { display: block; font-size: 15px; letter-spacing: -.01em; }
+.title span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px;
+  border-radius: 9px; border: 1px solid var(--line); background: var(--panel);
+  cursor: pointer; font-weight: 550; font-size: 13px; white-space: nowrap; box-shadow: var(--shadow);
+  transition: background .15s, border-color .15s, opacity .15s;
+}
+.btn:hover { border-color: var(--faint); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn svg { width: 15px; height: 15px; flex: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover { background: var(--line-2); color: var(--text); }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 12.5px; }
+
+.section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 650; margin: 22px 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.section-title small { text-transform: none; letter-spacing: 0; font-weight: 450; color: var(--faint); font-size: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); }
+.card + .card { margin-top: 10px; }
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: 12px; margin-top: 14px; font-size: 13px; border: 1px solid transparent; }
+.banner svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+.banner.warn { background: var(--warn-soft); color: var(--warn); }
+.banner.bad { background: var(--bad-soft); color: var(--bad); }
+.banner.info { background: var(--info-soft); color: var(--info); flex-wrap: wrap; }
+.banner b { font-weight: 650; }
+.banner .t { min-width: 0; flex: 1; }
+.banner .t span { display: block; color: var(--text); opacity: .8; word-break: break-word; }
+
+.running { margin-top: 14px; }
+.running .head { display: flex; align-items: center; gap: 10px; }
+.running .head b { font-size: 14px; }
+.running pre { margin: 10px 0 0; padding: 9px 11px; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 10px; font: 11.5px/1.5 var(--mono); color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; }
+.spin { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.rec { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: linear-gradient(180deg, var(--accent-soft), var(--panel) 70%); }
+.rec-top { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.rec-top .who { flex: 1; min-width: 200px; }
+.rec-top .who b { font: 650 19px/1.25 var(--mono); letter-spacing: -.01em; word-break: break-all; }
+.rec-top .who span { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.delta { font-size: 28px; font-weight: 750; color: var(--accent); letter-spacing: -.02em; line-height: 1; text-align: right; }
+.delta small { display: block; font-size: 11.5px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 4px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 5px 9px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); font-size: 12.5px; }
+.chip b { font-variant-numeric: tabular-nums; }
+.up { color: var(--ok); } .down { color: var(--bad); } .flat { color: var(--muted); }
+.actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.actions .btn { flex: 1; min-width: 120px; }
+.hint { color: var(--muted); font-size: 12.5px; margin-top: 10px; }
+
+.inc-head { display: flex; align-items: center; gap: 12px; }
+.score-ring { --v: 0; width: 54px; height: 54px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: conic-gradient(var(--accent) calc(var(--v) * 1%), var(--line-2) 0); }
+.score-ring span { width: 42px; height: 42px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.inc-head .who { min-width: 0; flex: 1; }
+.inc-head .who b { display: block; font: 650 15.5px/1.3 var(--mono); word-break: break-all; }
+.inc-head .who span { color: var(--muted); font-size: 12.5px; }
+.apps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 14px; }
+.app { border: 1px solid var(--line-2); background: var(--panel-2); border-radius: 11px; padding: 10px 12px; min-width: 0; }
+.app h4 { margin: 0 0 8px; font-size: 12.5px; display: flex; justify-content: space-between; gap: 8px; }
+.app h4 span { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.app h4 em { font-style: normal; color: var(--faint); font-weight: 500; margin-left: 4px; }
+.task { display: grid; grid-template-columns: 96px 1fr 34px; gap: 8px; align-items: center; font-size: 12px; padding: 3px 0; }
+.task .name { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.meter { height: 6px; border-radius: 4px; background: var(--line-2); overflow: hidden; display: block; }
+.meter i { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+.meter.warn i { background: var(--bad); }
+.app .skip { color: var(--faint); font-size: 12px; word-break: break-word; }
+.facts { display: flex; gap: 6px 16px; flex-wrap: wrap; margin-top: 12px; color: var(--muted); font-size: 12.5px; }
+.facts b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding: 0 8px 8px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.table td { padding: 9px 8px; border-bottom: 1px solid var(--line-2); vertical-align: top; font-variant-numeric: tabular-nums; }
+.table tr:last-child td { border-bottom: 0; }
+.table .m { font-family: var(--mono); font-weight: 600; word-break: break-all; }
+.table .num { text-align: right; white-space: nowrap; }
+.table .why { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.pill { display: inline-block; font: 600 10.5px/1 system-ui, sans-serif; letter-spacing: .03em; text-transform: uppercase; padding: 4px 6px; border-radius: 6px; white-space: nowrap; }
+.pill.recommended, .pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.rejected, .pill.failed { background: var(--bad-soft); color: var(--bad); }
+.pill.no_winner, .pill.dry, .pill.neutral { background: var(--line-2); color: var(--muted); }
+.pill.running, .pill.info { background: var(--info-soft); color: var(--info); }
+.pill.skipped, .pill.warn { background: var(--warn-soft); color: var(--warn); }
+.gpu { display: inline-flex; align-items: center; gap: 6px; }
+.gpu .meter { width: 38px; }
+.cands-cards { display: none; }
+.cand { border-top: 1px solid var(--line-2); padding: 11px 0; }
+.cand:first-child { border-top: 0; padding-top: 0; }
+.cand:last-child { padding-bottom: 0; }
+.cand .row1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.cand .m { font: 600 13px/1.35 var(--mono); word-break: break-all; }
+.cand .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.cand .grid div { background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 5px 7px; font-size: 11.5px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cand .grid b { display: block; color: var(--text); font-size: 13px; font-variant-numeric: tabular-nums; }
+.cand .why { color: var(--muted); font-size: 12px; margin-top: 7px; }
+
+.runs { padding: 0; overflow: hidden; }
+.run { border-top: 1px solid var(--line-2); }
+.run:first-child { border-top: 0; }
+.run summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 11px 14px; }
+.run summary::-webkit-details-marker { display: none; }
+.run summary b { font-size: 13px; font-weight: 600; }
+.run summary .msg { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; word-break: break-word; }
+.run[open] summary { background: var(--panel-2); }
+.run .body { padding: 4px 14px 14px; font-size: 12.5px; }
+.run .body h5 { margin: 10px 0 4px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.run .body pre { margin: 0; padding: 9px 11px; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 10px; font: 11.5px/1.5 var(--mono); color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow: auto; }
+.kv { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); word-break: break-word; }
+.kv b { color: var(--text); font-weight: 600; }
+.empty { color: var(--muted); text-align: center; padding: 22px 12px; font-size: 13px; }
+
+.foot { color: var(--faint); font-size: 12px; text-align: center; padding: 22px 0 32px; line-height: 1.7; }
+.foot b { color: var(--muted); font-weight: 600; }
+.foot button { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; padding: 0 0 0 4px; }
+.sched { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; margin: 18px 0 0; box-shadow: var(--shadow); }
+.sched h3 { margin: 0 0 4px; font-size: 14px; }
+.sched > p { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+.opts { display: grid; gap: 6px; }
+.opt { display: grid; grid-template-columns: 18px 1fr; gap: 2px 10px; align-items: start; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.opt:hover { border-color: var(--faint); }
+.opt.on { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { margin: 2px 0 0; accent-color: var(--accent); }
+.opt b { font-size: 13.5px; font-weight: 600; }
+.opt b em { font-style: normal; font-size: 11px; font-weight: 650; color: var(--ok); margin-left: 6px; text-transform: uppercase; letter-spacing: .03em; }
+.opt span { grid-column: 2; color: var(--muted); font-size: 12px; }
+.opt .custom { grid-column: 2; margin-top: 6px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); padding: 0 10px; font: 12.5px var(--mono); width: 100%; }
+.sched-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+  background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 11px; font-size: 13px; font-weight: 550;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: calc(100% - 32px); z-index: 20;
+}
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.bad { background: var(--bad); color: #fff; }
+
+@media (max-width: 640px) {
+  .cands-table { display: none; }
+  .cands-cards { display: block; }
+  .delta { font-size: 24px; }
+  .task { grid-template-columns: 88px 1fr 32px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation-duration: 2s !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0M3 3l18 18"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4"/></symbol>
+  </defs>
+</svg>
+
+<header>
+  <div class="wrap bar">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l5-7 4 3 7-9"/></svg></div>
+    <div class="title"><b id="ttl">modelwatch</b><span id="sub"></span></div>
+    <button class="btn primary" id="runBtn" type="button"><svg><use href="#i-play"/></svg><span></span></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banners"></div>
+  <div id="running"></div>
+  <div id="rec"></div>
+  <div id="inc"></div>
+  <div id="cands"></div>
+  <div id="runs"></div>
+  <div id="schedPanel"></div>
+  <div class="foot" id="foot"></div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const icon = (id) => `<svg><use href="#i-${id}"/></svg>`;
+
+const I18N = {
+  en: {
+    run: "Run now", run_sm: "Run", running: "Running…", loading: "Loading…",
+    sub: (a, b) => `Last run ${a} · next ${b}`, never: "never", now: "just now",
+    min: (n) => `${n} min ago`, h: (n) => `${n} h ago`, d: (n) => `${n} d ago`,
+    unreachable: "Server unreachable: ", ollama_down: "Ollama unreachable",
+    ollama_down_t: (u) => `${u} does not answer. Runs will wait for it.`,
+    diverge: "Your apps do not all use the same model",
+    rec: "Recommendation", rec_vs: (m, a, b) => `vs ${m}: ${a} → ${b}`, pts: "points overall",
+    adopt: "Adopt", ignore: "Ignore", rollback: (m) => `Back to ${m}`, rollback_t: "Undo the last switch",
+    rollback_help: (m, d, n) => `${m} was adopted ${d}. Going back stays possible for ${n} days.`,
+    manual: "No adopt target is configured: switch your apps yourself, then update current_model.",
+    confirm_adopt: (m, t) => `Switch ${t} to ${m}?\nTheir services will be recreated.`,
+    confirm_ignore: (m) => `Never suggest ${m} (this version) again?`,
+    confirm_rollback: (m, t) => `Go back to ${m} for ${t}?`,
+    t_run: "Run started", t_adopt: (m) => `Switching to ${m}`, t_ignore: (m) => `${m} ignored`, t_rollback: (m) => `Going back to ${m}`,
+    inc: "Current model", inc_none: "Not evaluated yet: it will be at the next run.", inc_unknown: "unknown — set current_model",
+    total: "total", speed: "speed", vram: "VRAM", gpu: "on GPU", load: "load", weight: (w) => `×${w}`,
+    skipped: "not evaluated", cands: "Candidates", cands_of: (d) => `run of ${d}`, no_cands: "No candidate evaluated yet.",
+    th_model: "Model", th_gpu: "GPU", th_total: "Total", th_verdict: "Verdict",
+    v: { recommended: "recommended", rejected: "rejected", current: "current" },
+    runs: "Recent runs", no_runs: "No run yet.",
+    status: { running: "running", recommended: "recommendation", no_winner: "nothing better", skipped: "skipped", failed: "failed", dry: "dry run" },
+    trig: { schedule: "scheduled", manual: "manual", cli: "command line", start: "on start" },
+    phase: { starting: "Starting", waiting_gpu: "Waiting for the GPU", counting: "Counting the cases", discovery: "Looking for candidates",
+             incumbent: "Scoring the current model", evaluating: "Evaluating", download: "Downloading", vram: "Measuring VRAM",
+             speed: "Measuring speed", suite: "Scoring", adopt: "Switching model", rollback: "Going back" },
+    cases: "Cases", discovery: "Discovery", seen: "Set aside", log: "Log",
+    foot: (s) => `Automatic runs: <b>${s}</b>`, change: "Change",
+    rules: (c) => `Recommended if +${c.min_improvement} points overall, no task down more than ${c.max_regression}, at least ${Math.round(c.min_speed_ratio * 100)} % of the current speed${c.require_full_gpu ? ", 100 % on GPU" : ""} · VRAM budget ${num(c.vram_budget_gb)} GB · ${c.max_candidates} candidates per run`,
+    today: "today", tomorrow: "tomorrow", gb: "GB",
+    sched_title: "Run frequency", sched_help: "When modelwatch looks for a better model. A run downloads and scores up to a few candidates: monthly is plenty.",
+    custom: "Custom", custom_help: "Comma-separated: 1 04:00 (day of month), sun 04:00 (weekday), 04:00 (every day), every 6h.",
+    cancel: "Cancel", save: "Save", saved: "Frequency saved", recommended: "recommended",
+    p_month: ["Once a month", "The 1st at 04:00 — new models come out at that pace."],
+    p_twice: ["Twice a month", "The 1st and the 15th at 04:00."],
+    p_week: ["Once a week", "Sunday 04:00 — for those who follow every release."],
+    p_night: ["Every night", "04:00 — mostly useful while tuning your suites."],
+  },
+  fr: {
+    run: "Lancer maintenant", run_sm: "Lancer", running: "En cours…", loading: "Chargement…",
+    sub: (a, b) => `Dernier passage ${a} · prochain ${b}`, never: "jamais", now: "à l'instant",
+    min: (n) => `il y a ${n} min`, h: (n) => `il y a ${n} h`, d: (n) => `il y a ${n} j`,
+    unreachable: "Serveur injoignable : ", ollama_down: "Ollama injoignable",
+    ollama_down_t: (u) => `${u} ne répond pas. Les passages l'attendront.`,
+    diverge: "Tes applications n'utilisent pas toutes le même modèle",
+    rec: "Recommandation", rec_vs: (m, a, b) => `contre ${m} : ${a} → ${b}`, pts: "pts au total",
+    adopt: "Adopter", ignore: "Ignorer", rollback: (m) => `Revenir à ${m}`, rollback_t: "Annuler la dernière adoption",
+    rollback_help: (m, d, n) => `${m} a été adopté ${d}. Le retour reste possible ${n} jours.`,
+    manual: "Aucune cible d'adoption configurée : passe tes applications dessus toi-même, puis mets à jour current_model.",
+    confirm_adopt: (m, t) => `Passer ${t} sur ${m} ?\nLes services concernés seront recréés.`,
+    confirm_ignore: (m) => `Ne plus jamais proposer ${m} (cette version) ?`,
+    confirm_rollback: (m, t) => `Revenir à ${m} pour ${t} ?`,
+    t_run: "Passage lancé", t_adopt: (m) => `Adoption de ${m} lancée`, t_ignore: (m) => `${m} ignoré`, t_rollback: (m) => `Retour à ${m} lancé`,
+    inc: "Modèle en place", inc_none: "Pas encore évalué : il le sera au prochain passage.", inc_unknown: "inconnu — renseigne current_model",
+    total: "total", speed: "vitesse", vram: "VRAM", gpu: "sur le GPU", load: "chargement", weight: (w) => `×${w}`,
+    skipped: "non évaluée", cands: "Candidats", cands_of: (d) => `passage du ${d}`, no_cands: "Aucun candidat évalué pour l'instant.",
+    th_model: "Modèle", th_gpu: "GPU", th_total: "Total", th_verdict: "Verdict",
+    v: { recommended: "recommandé", rejected: "rejeté", current: "en place" },
+    runs: "Derniers passages", no_runs: "Aucun passage pour l'instant.",
+    status: { running: "en cours", recommended: "recommandation", no_winner: "rien de mieux", skipped: "sauté", failed: "échec", dry: "à blanc" },
+    trig: { schedule: "programmé", manual: "manuel", cli: "ligne de commande", start: "au démarrage" },
+    phase: { starting: "Démarrage", waiting_gpu: "Attente du GPU", counting: "Comptage des cas", discovery: "Recherche des candidats",
+             incumbent: "Évaluation du modèle en place", evaluating: "Évaluation", download: "Téléchargement", vram: "Mesure de la VRAM",
+             speed: "Mesure de la vitesse", suite: "Évaluation", adopt: "Changement de modèle", rollback: "Retour arrière" },
+    cases: "Cas évalués", discovery: "Découverte", seen: "Écartés", log: "Journal",
+    foot: (s) => `Passages automatiques : <b>${s}</b>`, change: "Modifier",
+    rules: (c) => `Recommandé si +${c.min_improvement} pts au total, aucune tâche à plus de −${c.max_regression} pts, au moins ${Math.round(c.min_speed_ratio * 100)} % de la vitesse actuelle${c.require_full_gpu ? ", 100 % sur le GPU" : ""} · budget VRAM ${num(c.vram_budget_gb)} Go · ${c.max_candidates} candidats par passage`,
+    today: "aujourd'hui", tomorrow: "demain", gb: "Go",
+    sched_title: "Fréquence des passages", sched_help: "Quand modelwatch cherche un meilleur modèle. Un passage télécharge et note quelques candidats : une fois par mois suffit.",
+    custom: "Personnalisée", custom_help: "Séparées par des virgules : 1 04:00 (jour du mois), dim 04:00 (jour de semaine), 04:00 (chaque jour), every 6h.",
+    cancel: "Annuler", save: "Enregistrer", saved: "Fréquence enregistrée", recommended: "recommandé",
+    p_month: ["Une fois par mois", "Le 1er à 04:00 — les nouveaux modèles sortent à ce rythme."],
+    p_twice: ["Deux fois par mois", "Le 1er et le 15 à 04:00."],
+    p_week: ["Une fois par semaine", "Dimanche 04:00 — pour suivre chaque sortie."],
+    p_night: ["Chaque nuit", "04:00 — utile surtout pendant la mise au point des suites."],
+  },
+};
+const LANG = I18N[document.documentElement.dataset.lang] ? document.documentElement.dataset.lang : "en";
+const T = I18N[LANG];
+const LOCALE = LANG === "fr" ? "fr-FR" : "en-GB";
+const COLON = LANG === "fr" ? " : " : ": ";
+document.documentElement.lang = LANG;
+const PRESETS = [["1 04:00", "p_month", true], ["1 04:00, 15 04:00", "p_twice"], ["sun 04:00", "p_week"], ["04:00", "p_night"]];
+const sameSpec = (a, b) => String(a).replace(/\s+/g, "").toLowerCase() === String(b).replace(/\s+/g, "").toLowerCase();
+const presetOf = (spec) => PRESETS.find(([v]) => sameSpec(v, spec));
+
+let data = null, timer = null, busyLocal = false;
+let schedOpen = false, schedChoice = null, schedCustom = "";
+
+const num = (x, d = 1) => x == null ? "—" : Number(x).toLocaleString(LOCALE, { minimumFractionDigits: d, maximumFractionDigits: d });
+const sgn = (x) => x == null ? "—" : (x >= 0 ? "+" : "−") + num(Math.abs(x));
+const cls = (x) => x == null ? "flat" : x > 0.05 ? "up" : x < -0.05 ? "down" : "flat";
+function ago(t) {
+  if (!t) return T.never;
+  const s = Math.max(0, Date.now() / 1000 - t);
+  if (s < 60) return T.now;
+  if (s < 3600) return T.min(Math.round(s / 60));
+  if (s < 86400) return T.h(Math.round(s / 3600));
+  return T.d(Math.round(s / 86400));
+}
+function when(t) {
+  if (!t) return "—";
+  const d = new Date(t * 1000), now = new Date();
+  const hm = d.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === now.toDateString()) return `${T.today} ${hm}`;
+  const tm = new Date(now); tm.setDate(now.getDate() + 1);
+  if (d.toDateString() === tm.toDateString()) return `${T.tomorrow} ${hm}`;
+  return d.toLocaleDateString(LOCALE, { day: "numeric", month: "short" }) + " " + hm;
+}
+const day = (t) => t ? new Date(t * 1000).toLocaleDateString(LOCALE, { day: "numeric", month: "long" }) : "—";
+
+// --- suites and tasks come from the configuration and the results ---------
+function suiteNames() {
+  const names = (data.config.suites || []).map((s) => s.name);
+  const add = (r) => Object.keys(r?.suites || {}).forEach((n) => { if (!names.includes(n)) names.push(n); });
+  add(data.incumbent?.result);
+  for (const run of data.runs || []) for (const c of run.candidates || []) add(c);
+  return names;
+}
+const suiteCfg = (n) => (data.config.suites || []).find((s) => s.name === n) || { name: n, label: n, weight: 1, task_labels: {} };
+const suiteLabel = (n) => suiteCfg(n).label || n;
+const taskLabel = (n, t) => (suiteCfg(n).task_labels || {})[t] || String(t).replace(/_/g, " ");
+const short = (s, n = 9) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+const targets = () => {
+  const t = data.config.adopt.targets;
+  return t.length > 1 ? t.slice(0, -1).join(", ") + (LANG === "fr" ? " et " : " and ") + t[t.length - 1] : t.join("");
+};
+
+async function api(path, method = "GET", body) {
+  const headers = { "X-Modelwatch": "1" };
+  if (body) headers["Content-Type"] = "application/json";
+  const r = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  let out = null;
+  try { out = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(out?.error || `HTTP ${r.status}`);
+  return out;
+}
+function toast(msg, bad = false) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "toast on" + (bad ? " bad" : "");
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => (t.className = "toast" + (bad ? " bad" : "")), 3200);
+}
+async function load() {
+  try { data = await api("/api/state"); render(); }
+  catch (e) { $("#sub").textContent = T.unreachable + e.message; }
+  clearTimeout(timer);
+  timer = setTimeout(load, data?.running ? 3000 : 30000);
+}
+async function act(path, msg, confirmMsg) {
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  busyLocal = true; render();
+  try { await api(path, "POST"); toast(msg); } catch (e) { toast(e.message, true); }
+  busyLocal = false; load();
+}
+
+// --- rendering ------------------------------------------------------------
+function suiteScores(result) {
+  const out = {};
+  for (const n of suiteNames()) {
+    const s = result?.suites?.[n];
+    if (!s) continue;
+    if (s.tasks) {
+      const ok = Object.entries(s.tasks).filter(([, v]) => v.n && v.failed < v.n);
+      out[n] = { tasks: s.tasks, mean: ok.length ? ok.reduce((a, [, v]) => a + v.score, 0) / ok.length : null };
+    } else out[n] = { skipped: s.skipped || s.error };
+  }
+  return out;
+}
+const meter = (v, warn = false) => `<span class="meter${warn ? " warn" : ""}"><i style="width:${Math.max(0, Math.min(100, v || 0))}%"></i></span>`;
+
+function renderBanners() {
+  const b = [];
+  if (!data.ollama_up) b.push(`<div class="banner bad">${icon("plug")}<div class="t"><b>${esc(T.ollama_down)}</b><span>${esc(T.ollama_down_t(data.ollama_url))}</span></div></div>`);
+  if (data.divergence?.length) b.push(`<div class="banner warn">${icon("warn")}<div class="t"><b>${esc(T.diverge)}</b><span class="mono">${data.divergence.map(esc).join(" · ")}</span></div></div>`);
+  $("#banners").innerHTML = b.join("");
+}
+
+function renderRunning() {
+  const r = data.running;
+  $("#running").innerHTML = r ? `<div class="card running"><div class="head"><span class="spin"></span><div><b>${esc(T.phase[r.phase] || r.phase || T.running)}</b>${r.detail ? `<div class="muted mono" style="font-size:12px;word-break:break-all">${esc(r.detail)}</div>` : ""}</div></div>
+    ${r.log?.length ? `<pre>${esc(r.log.join("\n"))}</pre>` : ""}</div>` : "";
+}
+
+function findCandidate(model) {
+  for (const run of data.runs || []) for (const c of run.candidates || []) if (c.model === model) return c;
+  return null;
+}
+
+function renderRec() {
+  const rec = data.recommendation;
+  const adopt = data.config.adopt.enabled;
+  let html = "";
+  if (rec) {
+    const c = findCandidate(rec.model);
+    const cmp = c?.compare;
+    const chips = cmp ? suiteNames().filter((n) => cmp.suites?.[n]).map((n) => `<span class="chip">${esc(suiteLabel(n))} <b class="${cls(cmp.suites[n].delta)}">${sgn(cmp.suites[n].delta)}</b></span>`).join("") : "";
+    const facts = c ? `<span class="chip">${esc(T.speed)} <b>${num(c.speed?.tokens_per_s, 0)} tok/s</b></span><span class="chip">${esc(T.vram)} <b>${num(c.fit?.vram_gb)} ${T.gb}</b></span><span class="chip"><b>${num(c.fit?.gpu_pct, 0)} %</b> ${esc(T.gpu)}</span>` : "";
+    html += `<div class="section-title">${esc(T.rec)}<small>${esc(when(rec.at))}</small></div>
+    <div class="card rec"><div class="rec-top"><div class="who"><b>${esc(rec.model)}</b><span>${esc(T.rec_vs(rec.incumbent, num(rec.incumbent_total), num(rec.total)))}</span></div>
+      <div class="delta">${sgn(rec.delta)}<small>${esc(T.pts)}</small></div></div>
+      <div class="chips">${chips}${facts}</div>
+      <div class="actions">${adopt ? `<button class="btn primary" data-adopt="${esc(rec.model)}" ${busy() ? "disabled" : ""}>${icon("check")}${esc(T.adopt)}</button>` : ""}
+        <button class="btn" data-ignore="${esc(rec.model)}">${icon("mute")}${esc(T.ignore)}</button></div>
+      ${adopt ? "" : `<div class="hint">${esc(T.manual)}</div>`}</div>`;
+  }
+  if (data.rollback_to) {
+    const last = data.adoptions?.[0];
+    html += `<div class="banner info">${icon("undo")}<div class="t"><b>${esc(T.rollback_t)}</b><span>${esc(T.rollback_help(last?.to || "", ago(last?.at), data.config.rollback_days))}</span></div>
+      <button class="btn sm" data-rollback="${esc(data.rollback_to)}" ${busy() ? "disabled" : ""}>${esc(T.rollback(data.rollback_to))}</button></div>`;
+  }
+  $("#rec").innerHTML = html;
+}
+
+function renderIncumbent() {
+  const inc = data.incumbent;
+  const res = inc.result;
+  const sc = suiteScores(res);
+  const total = res?.total;
+  const blocks = suiteNames().filter((n) => sc[n]).map((n) => {
+    const s = sc[n];
+    const w = suiteCfg(n).weight;
+    const head = `${esc(suiteLabel(n))}${w !== 1 ? `<em>${esc(T.weight(w))}</em>` : ""}`;
+    if (s.skipped) return `<div class="app"><h4><b>${head}</b><span>—</span></h4><div class="skip">${esc(T.skipped)}${COLON}${esc(s.skipped)}</div></div>`;
+    const rows = Object.entries(s.tasks).map(([t, v]) => `<div class="task" title="${esc((v.notes || []).join("\n"))}"><span class="name">${esc(taskLabel(n, t))}</span>${meter(v.score)}<span class="val">${num(v.score, 0)}</span></div>`).join("");
+    return `<div class="app"><h4><b>${head}</b><span>${num(s.mean, 1)}</span></h4>${rows}</div>`;
+  }).join("");
+  $("#inc").innerHTML = `<div class="section-title">${esc(T.inc)}${res?.evaluated_at ? `<small>${esc(day(res.evaluated_at))}</small>` : ""}</div>
+    <div class="card"><div class="inc-head"><div class="score-ring" style="--v:${total || 0}"><span>${total == null ? "—" : num(total, 0)}</span></div>
+      <div class="who"><b>${esc(inc.model || T.inc_unknown)}</b><span>${total == null ? esc(T.inc_none) : `${esc(T.total)} ${num(total)} / 100`}</span></div></div>
+      ${res ? `<div class="apps">${blocks}</div>
+      <div class="facts"><span>${esc(T.speed)} <b>${num(res.speed?.tokens_per_s, 0)} tok/s</b></span><span>${esc(T.vram)} <b>${num(res.fit?.vram_gb)} ${T.gb}</b></span><span><b>${num(res.fit?.gpu_pct, 0)} %</b> ${esc(T.gpu)}</span><span>${esc(T.load)} <b>${num(res.fit?.load_s)} s</b></span></div>` : ""}</div>`;
+}
+
+function verdictPill(c) {
+  const k = { recommended: "recommended", rejected: "rejected" }[c.verdict] || "neutral";
+  return `<span class="pill ${k}">${esc(T.v[c.verdict] || c.verdict || "—")}</span>`;
+}
+function suiteCell(c, n) {
+  const d = c.compare?.suites?.[n];
+  if (d) return `${num(d.score, 0)} <span class="${cls(d.delta)}" style="font-size:11px">${sgn(d.delta)}</span>`;
+  const s = c.suites?.[n];
+  return `<span class="faint" title="${esc(s?.skipped || s?.error || "")}">—</span>`;
+}
+function gpuCell(c) {
+  if (!c.fit) return `<span class="faint">—</span>`;
+  return `<span class="gpu">${meter(c.fit.gpu_pct, c.fit.gpu_pct < 100)}${num(c.fit.vram_gb)} ${T.gb}</span>`;
+}
+
+function renderCands() {
+  const run = (data.runs || []).find((r) => r.candidates?.length);
+  if (!run) { $("#cands").innerHTML = `<div class="section-title">${esc(T.cands)}</div><div class="card empty">${esc(T.no_cands)}</div>`; return; }
+  const cs = run.candidates;
+  const names = suiteNames();
+  const head = [T.th_model, T.th_gpu, "tok/s", T.th_total, ...names.map((n) => short(suiteLabel(n))), T.th_verdict];
+  const rows = cs.map((c) => `<tr><td><div class="m">${esc(c.model)}</div><div class="why">${esc(c.reason || "")}</div></td>
+      <td>${gpuCell(c)}</td><td class="num">${num(c.speed?.tokens_per_s, 0)}</td>
+      <td class="num"><b>${num(c.compare?.total ?? c.total)}</b>${c.compare ? `<div class="${cls(c.compare.delta)}" style="font-size:11px">${sgn(c.compare.delta)}</div>` : ""}</td>
+      ${names.map((n) => `<td class="num">${suiteCell(c, n)}</td>`).join("")}<td>${verdictPill(c)}</td></tr>`).join("");
+  const cards = cs.map((c) => `<div class="cand"><div class="row1"><span class="m">${esc(c.model)}</span>${verdictPill(c)}</div>
+      <div class="grid"><div>${esc(T.total)}<b>${num(c.compare?.total ?? c.total)} <span class="${cls(c.compare?.delta)}" style="font-size:11px">${c.compare ? sgn(c.compare.delta) : ""}</span></b></div>
+        <div>${esc(T.vram)}<b>${c.fit ? `${num(c.fit.vram_gb)} ${T.gb}` : "—"}</b></div><div>tok/s<b>${num(c.speed?.tokens_per_s, 0)}</b></div>
+        ${c.compare ? names.map((n) => `<div>${esc(suiteLabel(n))}<b>${suiteCell(c, n)}</b></div>`).join("") : ""}</div>
+      ${c.reason ? `<div class="why">${esc(c.reason)}</div>` : ""}</div>`).join("");
+  $("#cands").innerHTML = `<div class="section-title">${esc(T.cands)}<small>${esc(T.cands_of(day(run.started)))}</small></div>
+    <div class="card cands-table" style="padding:12px 6px 4px;overflow-x:auto"><table class="table"><thead><tr>${head.map((h, i) => `<th class="${i >= 2 && i < head.length - 1 ? "num" : ""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="card cands-cards">${cards}</div>`;
+}
+
+function renderRuns() {
+  const runs = data.runs || [];
+  if (!runs.length) { $("#runs").innerHTML = `<div class="section-title">${esc(T.runs)}</div><div class="card empty">${esc(T.no_runs)}</div>`; return; }
+  const items = runs.map((r) => {
+    const st = r.status || "running";
+    const pillCls = { recommended: "ok", no_winner: "neutral", dry: "neutral", running: "info", skipped: "warn", failed: "failed" }[st] || "neutral";
+    const cases = r.cases ? Object.entries(r.cases).map(([n, t]) => `<span>${esc(suiteLabel(n))}${COLON}<b>${Object.entries(t).map(([k, c]) => k === "_" ? esc(c) : `${esc(taskLabel(n, k))} ${c}`).join(", ")}</b></span>`).join("") : "";
+    const disc = r.discovery;
+    return `<details class="run" id="run-${esc(r.id)}"><summary><b>${esc(day(r.started))} · ${esc(new Date((r.started || 0) * 1000).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" }))}</b>
+        <span><span class="pill ${pillCls}">${esc(T.status[st] || st)}</span></span>
+        <span class="msg">${esc(r.message || "")}${r.trigger ? ` · ${esc(T.trig[r.trigger] || r.trigger)}` : ""}</span></summary>
+      <div class="body">
+        ${cases ? `<h5>${esc(T.cases)}</h5><div class="kv">${cases}</div>` : ""}
+        ${disc ? `<h5>${esc(T.discovery)}</h5><div class="kv">${(disc.picked || []).map((c) => `<span class="mono"><b>${esc(c.model)}</b> ${num(c.size / 1073741824)} ${T.gb}</span>`).join("") || "—"}</div>
+          ${disc.seen?.length ? `<h5>${esc(T.seen)}</h5><div class="kv">${disc.seen.slice(0, 12).map((s) => `<span class="mono">${esc(s.model)} <span class="faint">(${esc(s.skip)})</span></span>`).join("")}</div>` : ""}
+          ${disc.notes?.length ? `<div class="kv faint" style="margin-top:6px">${disc.notes.map(esc).join("<br>")}</div>` : ""}` : ""}
+        ${r.log?.length ? `<h5>${esc(T.log)}</h5><pre>${esc(r.log.slice(-60).join("\n"))}</pre>` : ""}
+      </div></details>`;
+  }).join("");
+  $("#runs").innerHTML = `<div class="section-title">${esc(T.runs)}</div><div class="card runs">${items}</div>`;
+}
+
+function renderSchedule() {
+  const el = $("#schedPanel");
+  if (!schedOpen) { el.innerHTML = ""; return; }
+  if (schedChoice === null) {
+    const p = presetOf(data.schedule);
+    schedChoice = p ? p[0] : "custom";
+    schedCustom = p ? "" : data.schedule;
+  }
+  const opt = (value, title, help, rec) => `<label class="opt${schedChoice === value ? " on" : ""}">
+      <input type="radio" name="sched" value="${esc(value)}"${schedChoice === value ? " checked" : ""}>
+      <b>${esc(title)}${rec ? `<em>${esc(T.recommended)}</em>` : ""}</b><span>${esc(help)}</span></label>`;
+  el.innerHTML = `<section class="sched"><h3>${esc(T.sched_title)}</h3><p>${esc(T.sched_help)}</p>
+    <div class="opts">${PRESETS.map(([v, k, rec]) => opt(v, T[k][0], T[k][1], rec)).join("")}
+      <label class="opt${schedChoice === "custom" ? " on" : ""}"><input type="radio" name="sched" value="custom"${schedChoice === "custom" ? " checked" : ""}>
+        <b>${esc(T.custom)}</b><span>${esc(T.custom_help)}</span>
+        <input class="custom" id="schedCustom" value="${esc(schedCustom)}" placeholder="1 04:00" autocomplete="off"></label></div>
+    <div class="sched-actions"><button type="button" class="btn sm ghost" id="schedCancel">${esc(T.cancel)}</button>
+      <button type="button" class="btn sm primary" id="schedSave">${esc(T.save)}</button></div></section>`;
+}
+async function saveSchedule() {
+  const spec = schedChoice === "custom" ? schedCustom.trim() : schedChoice;
+  try {
+    await api("/api/schedule", "POST", { schedule: spec });
+    schedOpen = false; schedChoice = null;
+    toast(T.saved);
+    load();
+  } catch (e) { toast(e.message, true); }
+}
+
+const busy = () => busyLocal || !!data?.running;
+const scheduleText = () => { const p = presetOf(data.schedule); return p ? `${T[p[1]][0].toLowerCase()} (${data.schedule_label})` : data.schedule_label; };
+
+function render() {
+  if (!data) return;
+  $("#sub").textContent = data.running ? T.running : T.sub(ago(data.last_run), when(data.next_run));
+  const rb = $("#runBtn");
+  rb.disabled = busy() || !data.ollama_up;
+  rb.querySelector("span").textContent = data.running ? T.running : (innerWidth < 480 ? T.run_sm : T.run);
+  renderBanners(); renderRunning(); renderRec(); renderIncumbent(); renderCands();
+  const openRuns = [...document.querySelectorAll("details.run[open]")].map((d) => d.id);
+  renderRuns();
+  openRuns.forEach((id) => document.getElementById(id)?.setAttribute("open", ""));
+  if (location.hash && !render.scrolled) { render.scrolled = true; const el = document.getElementById(location.hash.slice(1)); if (el) { el.setAttribute("open", ""); el.scrollIntoView({ block: "center" }); } }
+  $("#foot").innerHTML = `${T.foot(esc(scheduleText()))}<button type="button" id="schedBtn">${esc(T.change)}</button><br>${esc(T.rules(data.config))}${data.version ? ` · modelwatch ${esc(data.version)}` : ""}`;
+  if (!schedOpen) renderSchedule();
+}
+
+document.addEventListener("change", (e) => { if (e.target.name === "sched") { schedChoice = e.target.value; renderSchedule(); } });
+document.addEventListener("input", (e) => {
+  if (e.target.id === "schedCustom") { schedCustom = e.target.value; if (schedChoice !== "custom") { schedChoice = "custom"; renderSchedule(); $("#schedCustom").focus(); } }
+});
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#schedBtn")) { schedOpen = !schedOpen; schedChoice = null; renderSchedule(); if (schedOpen) $("#schedPanel").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  if (e.target.closest("#schedCancel")) { schedOpen = false; schedChoice = null; return renderSchedule(); }
+  if (e.target.closest("#schedSave")) return saveSchedule();
+  const t = e.target.closest("[data-adopt],[data-ignore],[data-rollback]");
+  if (!t) return;
+  if (t.dataset.adopt) return act(`/api/adopt/${encodeURIComponent(t.dataset.adopt)}`, T.t_adopt(t.dataset.adopt), T.confirm_adopt(t.dataset.adopt, targets()));
+  if (t.dataset.ignore) return act(`/api/ignore/${encodeURIComponent(t.dataset.ignore)}`, T.t_ignore(t.dataset.ignore), T.confirm_ignore(t.dataset.ignore));
+  if (t.dataset.rollback) return act("/api/rollback", T.t_rollback(t.dataset.rollback), T.confirm_rollback(t.dataset.rollback, targets()));
+});
+$("#sub").textContent = T.loading;
+$("#runBtn span").textContent = T.run;
+$("#runBtn").addEventListener("click", () => act("/api/run", T.t_run));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+load();
+</script>
+</body>
+</html>
