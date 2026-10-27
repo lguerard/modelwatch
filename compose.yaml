@@ -1,0 +1,35 @@
+# modelwatch -- minimal setup. See README.md for every option.
+services:
+  modelwatch:
+    image: ghcr.io/lguerard/modelwatch:latest
+    container_name: modelwatch
+    environment:
+      - TZ=Europe/Paris
+      # Signs the notification buttons: openssl rand -hex 32
+      - MODELWATCH_SECRET=change-me
+      # ntfy topic your phone subscribes to (keep it secret on ntfy.sh).
+      - MODELWATCH_NTFY_TOPIC=change-me-to-a-random-topic
+      # Address your PHONE uses to reach modelwatch (VPN name/IP or LAN IP).
+      - MODELWATCH_PUBLIC_URL=http://my-server:8097
+      # Optional: password for the web interface.
+      # - MODELWATCH_UI_PASSWORD=
+    volumes:
+      # modelwatch.yml (start from examples/minimal.yml) and its case files.
+      - ./config:/config:ro
+      - ./data:/data
+      # Only for exec suites, exec probes, nvidia-smi in a container, and
+      # adopt: the Docker socket is root on the host (see Security).
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Adopt only: the folders holding your apps' .env and compose files,
+      # AT THE SAME PATH and read-write (modelwatch edits the .env files).
+      # - /opt/stacks:/opt/stacks
+    ports:
+      - "8097:8097"
+    networks:
+      - default
+      # The network your Ollama is on, so http://ollama:11434 resolves.
+      # - ollama
+    restart: unless-stopped
+# networks:
+#   ollama:
+#     external: true
