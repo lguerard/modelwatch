@@ -1,0 +1,104 @@
+# modelwatch -- minimal setup: one Ollama, two built-in case suites, ntfy.
+#
+# No adopt target: a recommendation is a notification, you switch your apps
+# yourself and then update current_model. Copy this file and the cases/
+# folder next to it into the folder mounted at /config.
+#
+# Every setting has a default (see README, Configuration); MODELWATCH_*
+# environment variables override the main ones.
+
+schedule: "1 04:00"             # the 1st of every month at 04:00, local time (TZ)
+secret: ${MODELWATCH_SECRET}    # signs the notification buttons: openssl rand -hex 32
+current_model: gemma3:12b       # what your apps use today
+
+ollama:
+  url: http://ollama:11434
+  num_ctx: 8192                 # the context window your apps use: the GPU fit is measured with it
+
+discovery:
+  vram_budget_gb: 9.5           # VRAM the model may take (a 10 GB card here)
+  max_candidates: 3             # candidates pulled and scored per run
+
+suites:
+  # French text extraction: the reply must be JSON, scored field by field.
+  - name: extraction
+    label: Extraction (FR)
+    type: cases
+    system: Tu extrais des informations de documents français. Réponds uniquement avec l'objet JSON demandé.
+    cases:
+      - id: facture-edf
+        task: invoice
+        prompt: |
+          Extrais de cette facture un objet JSON avec "fournisseur", "numero",
+          "date" (AAAA-MM-JJ) et "total" (nombre, en euros).
+
+          EDF — Électricité de France
+          Facture n° 2026-0314-778          Date d'émission : 14 mars 2026
+          Client : M. Laurent Martin, 12 rue des Lilas, 69003 Lyon
+          Abonnement (1 mois) ............ 15,40 €
+          Consommation 182 kWh ........... 26,05 €
+          Taxes et contributions .......... 3,75 €
+          Total TTC à payer : 45,20 € avant le 28 mars 2026
+        schema:
+          type: object
+          properties:
+            fournisseur: {type: string}
+            numero: {type: string}
+            date: {type: string}
+            total: {type: number}
+          required: [fournisseur, numero, date, total]
+        scorer: json_fields
+        fields:
+          fournisseur: {expect: EDF, match: contains}
+          numero: "2026-0314-778"
+          date: "2026-03-14"
+          total: {expect: 45.2, tolerance: 0.01, weight: 2}
+      - id: ordonnance
+        task: invoice
+        prompt: |
+          Extrais de cette ordonnance un objet JSON avec "medecin", "patient",
+          "medicaments" (liste des noms, sans dosage) et "duree_jours" (nombre).
+
+          Dr Claire Dubois — Médecine générale — 8 place Bellecour, Lyon
+          Le 3 février 2026, pour Mme Sophie Bernard
+          - Amoxicilline 1 g : 1 comprimé matin et soir
+          - Paracétamol 1000 mg : si douleur, 3 fois par jour au plus
+          Traitement pour 7 jours.
+        schema: {type: object}
+        scorer: json_fields
+        fields:
+          medecin: {expect: Claire Dubois, match: contains}
+          patient: {expect: Sophie Bernard, match: contains}
+          medicaments: [Amoxicilline, Paracétamol]
+          duree_jours: 7
+      - id: total-only
+        task: amounts
+        prompt: "Quel est le montant total TTC de cette note ? Réponds par le nombre seul.\n\nRestaurant Le Bouchon — 2 menus à 24,50 € — 1 bouteille d'eau 4,00 € — Total TTC : 53,00 €"
+        scorer: numeric
+        expect: 53
+        tolerance: 0.01
+      - id: sender
+        task: amounts
+        prompt: "Qui a envoyé ce courrier ? Réponds par le nom de l'organisme seulement.\n\nCaisse d'Allocations Familiales du Rhône — Lyon, le 2 mai 2026 — Madame, nous avons étudié votre dossier…"
+        scorer: contains
+        expect: [Caisse d'Allocations Familiales]
+
+  # An image description, with the small test image bundled in cases/.
+  - name: vision
+    label: Image
+    type: cases
+    file: cases/describe-image.yml
+
+decision:
+  min_improvement: 5            # points (out of 100) overall to be recommended
+  max_regression: 3             # largest drop tolerated on any single task
+  min_speed_ratio: 0.6          # at least 60 % of the current speed
+
+notify:
+  ntfy:
+    url: https://ntfy.sh
+    topic: change-me-to-a-long-random-topic   # openssl rand -hex 16
+
+ui:
+  language: en                  # en or fr
+  public_url: http://my-server:8097           # how your PHONE reaches modelwatch

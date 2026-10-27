@@ -1,0 +1,137 @@
+# modelwatch -- a home server where ONE Ollama (the popote stack) serves ONE
+# model to three apps: Popote (recipes), Paperless-ngx (documents) and
+# Tricouture (knitting). This is the configuration of the owner's server
+# (github.com/lguerard/server_setup), kept as a complete real-world example.
+#
+# The compose service sets MODELWATCH_REPO_DIR to the repository's path and
+# mounts that repository at the SAME path, read-write: "Adopt" edits the
+# three .env files (a .modelwatch.bak copy is kept next to each) and
+# recreates the services with the compose files that started them.
+# Secrets and ntfy come from MODELWATCH_* variables (README, Configuration).
+
+schedule: "1 04:00"
+current_model: gemma4:12b       # used when a model variable is missing from an .env file
+max_cases: 12
+
+ollama:
+  url: http://ollama:11434
+  num_ctx: 8192                 # the window all three apps send
+  embed_models: [nomic-embed-text]   # Tricouture's embeddings: loaded, but not "busy"
+  gpu_memory:
+    mode: docker                # nvidia-smi inside the Ollama container
+    container: {project: popote, service: ollama}
+  speed_prompt: Décris en un paragraphe la préparation d'une pâte à crêpes, étape par étape.
+
+idle:
+  retry_minutes: 15
+  max_hours: 3
+  probes:
+    # Popote: extraction, Whisper transcription or image generation in
+    # progress (they unload Ollama, so /api/ps does not see them).
+    - name: popote-jobs
+      type: exec
+      container: {project: popote, service: db}
+      command: [psql, -U, popote, -d, popote, -Atc, "SELECT count(*) FROM recipes WHERE status IN ('pending', 'processing') OR thumbnail_generating OR reextracting"]
+      busy_when: {number_above: 0}
+      message: Popote traite {output} recette(s) (extraction, vidéo ou image)
+    - name: popote-video
+      type: exec
+      container: {project: popote, service: backend}
+      processes: '\b(ffmpeg|yt-dlp|gallery-dl)\b'
+      message: Popote lit une vidéo (ffmpeg / yt-dlp)
+
+discovery:
+  vram_budget_gb: 9.5           # RTX 3080, 10 GB, shared with Frigate and Immich
+  max_download_gb: 12
+  max_candidates: 4
+  min_pulls: 20000
+  extra_models: []              # e.g. hf.co/<author>/<repo>:Q4_K_M (MODELWATCH_EXTRA_MODELS)
+  required_capabilities: [completion, vision]   # Paperless and Tricouture read images
+
+suites:
+  # Popote scores itself on its own tasks and prompts, inside its backend.
+  - name: popote
+    label: Popote
+    type: exec
+    container: {project: popote, service: backend}
+    command: [python, -m, app.scripts.model_eval, --model, "{model}", --max-cases, "{max_cases}"]
+    dry_args: [--cases-only]
+    timeout: 10800
+    task_labels: {photo_recipe: photo}
+
+  # Tricouture: POST /api/cron/model-eval inside its container (its port is
+  # not published). `http` rather than fetch(), whose 5 min header timeout
+  # would cut a long evaluation; the token is read from the container's env.
+  - name: tricouture
+    label: Tricouture
+    type: exec
+    container: {project: tricouture, service: app}
+    command:
+      - node
+      - -e
+      - |
+        const http = require('http');
+        const [model, maxCases, dry] = process.argv.slice(1);
+        const body = JSON.stringify({ model, maxCases: Number(maxCases) || undefined, dry: dry === 'true' });
+        const req = http.request({ host: '127.0.0.1', port: process.env.PORT || 3000, path: '/api/cron/model-eval',
+          method: 'POST', headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body),
+          authorization: 'Bearer ' + (process.env.MODEL_WATCH_TOKEN || '') } }, (res) => {
+          let d = ''; res.setEncoding('utf8'); res.on('data', (c) => (d += c));
+          res.on('end', () => { process.stdout.write(d); process.exit(res.statusCode === 200 ? 0 : 2); });
+        });
+        req.on('error', (e) => { console.error(e.message); process.exit(1); });
+        req.end(body);
+      - "{model}"
+      - "{max_cases}"
+      - "{dry}"
+    timeout: 10800
+    skip_when:
+      - matches: MODEL_WATCH_TOKEN
+        reason: MODEL_WATCH_TOKEN absent de tricouture/.env (./install.sh le génère)
+    task_labels: {label: étiquette, pieces: pièces, pattern_info: infos patron, translation: traduction}
+
+  # Paperless-ngx: nothing of ours runs inside it, the built-in plugin reads
+  # its database (classified documents out of the inbox) and its originals.
+  - name: paperless
+    label: Paperless
+    type: paperless
+    db_container: paperless-db
+    web_container: paperless
+    max_ocr: 6
+    exclude_inbox: true
+    exclude_tags: ["paperless-gpt%"]
+    prompt_language: fr
+    task_labels: {metadata: métadonnées, ocr: OCR}
+
+decision:
+  min_improvement: 5
+  max_regression: 3
+  min_speed_ratio: 0.6
+  require_full_gpu: true
+
+adopt:
+  rollback_days: 7
+  health_timeout: 180
+  targets:
+    # The first key of the first target is the current model.
+    - name: popote
+      env_file: ${MODELWATCH_REPO_DIR}/popote/.env
+      keys: [OLLAMA_MODEL]
+      services:
+        - {project: popote, service: backend}
+    - name: paperless
+      env_file: ${MODELWATCH_REPO_DIR}/paperless/.env
+      keys: [PAPERLESS_AI_LLM_MODEL, PAPERLESS_GPT_LLM_MODEL, PAPERLESS_GPT_VISION_MODEL]
+      services:
+        - {project: paperless, service: webserver}
+        - {project: paperless, service: paperless-gpt}
+    - name: tricouture
+      env_file: ${MODELWATCH_REPO_DIR}/tricouture/.env
+      keys: [OLLAMA_CHAT_MODEL]
+      services:
+        - {project: tricouture, service: app}
+
+# Same ntfy topic as updock: MODELWATCH_NTFY_URL / _TOPIC / _TOKEN.
+ui:
+  language: fr
+  public_url: http://192.168.1.101:8097     # LAN or Tailscale, never a Cloudflare route

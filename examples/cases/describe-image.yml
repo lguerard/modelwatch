@@ -1,0 +1,24 @@
+# Cases of the "vision" suite of minimal.yml. Image paths are relative to
+# this file. red-circle.png: a red disc on a white background, 128 x 128.
+defaults:
+  num_predict: 128
+
+cases:
+  - id: red-circle
+    task: describe
+    prompt: Describe this image in one short sentence, in English.
+    images: [red-circle.png]
+    scorer: regex
+    expect: ['\bred\b', 'circle|disc|dot|round|ball']
+  - id: colour
+    task: details
+    prompt: What colour is the shape? Answer with one word, in English.
+    images: [red-circle.png]
+    scorer: exact
+    expect: red
+  - id: count
+    task: details
+    prompt: How many shapes are there in this image? Answer with a number only.
+    images: [red-circle.png]
+    scorer: numeric
+    expect: 1
