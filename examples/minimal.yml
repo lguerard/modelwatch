@@ -17,7 +17,8 @@ ollama:
 
 discovery:
   vram_budget_gb: 9.5           # VRAM the model may take (a 10 GB card here)
-  max_candidates: 3             # candidates pulled and scored per run
+  max_candidates: 12            # candidates pulled and scored per run
+  per_family: 3                 # biggest fitting sizes tried per family
 
 suites:
   # French text extraction: the reply must be JSON, scored field by field.
