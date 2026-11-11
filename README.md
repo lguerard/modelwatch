@@ -105,6 +105,9 @@ A run (the 1st of the month at 04:00 by default):
    must weigh at most `vram_budget_gb` − 1 GB and `max_download_gb`.
    `max_candidates` per run (up to `per_family` sizes of each family); already-scored ones (same digest, same cases),
    ignored ones and models that did not fit before are skipped.
+   Models that need a newer Ollama than yours are skipped before any
+   download (the next ones take their place) and you are told to update;
+   they are tried again once Ollama is updated.
 5. **Evaluates each candidate**: pull; check its capabilities
    (`required_capabilities`, e.g. vision); unload everything, load it alone
    with `num_ctx` and **measure** its share on the GPU (`/api/ps`) and the
