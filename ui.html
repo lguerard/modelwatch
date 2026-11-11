@@ -525,7 +525,7 @@ function renderRuns() {
       <div class="body">
         ${cases ? `<h5>${esc(T.cases)}</h5><div class="kv">${cases}</div>` : ""}
         ${disc ? `<h5>${esc(T.discovery)}</h5><div class="kv">${(disc.picked || []).map((c) => `<span class="mono"><b>${esc(c.model)}</b> ${num(c.size / 1073741824)} ${T.gb}</span>`).join("") || "—"}</div>
-          ${disc.seen?.length ? `<h5>${esc(T.seen)}</h5><div class="kv">${disc.seen.slice(0, 12).map((s) => `<span class="mono">${esc(s.model)} <span class="faint">(${esc(s.skip)})</span></span>`).join("")}</div>` : ""}
+          ${disc.seen?.length ? `<h5>${esc(T.seen)}</h5><div class="kv">${disc.seen.map((s) => `<span class="mono">${esc(s.model)} <span class="faint">(${esc(s.skip)})</span></span>`).join("")}</div>` : ""}
           ${disc.notes?.length ? `<div class="kv faint" style="margin-top:6px">${disc.notes.map(esc).join("<br>")}</div>` : ""}` : ""}
         ${r.log?.length ? `<h5>${esc(T.log)}</h5><pre>${esc(r.log.slice(-60).join("\n"))}</pre>` : ""}
       </div></details>`;

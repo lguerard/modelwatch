@@ -486,9 +486,9 @@ DEFAULT_FAMILIES = ["gemma4", "gemma3", "qwen3.5", "qwen3-vl", "qwen2.5vl",
                     "mistral-small3.2", "mistral-small3.1", "llama4", "llama3.2-vision",
                     "minicpm-v", "granite3.2-vision", "phi4-multimodal",
                     "glm4v", "glm-4.5v", "glm-4.1v", "internvl3.5", "internvl3", "kimi-vl",
-                    "deepseek-vl2", "gemma3n", "ministral-3", "qwen3", "qwen3.6",
+                    "deepseek-vl2", "ministral-3", "qwen3.6",
                     "llava", "llava-llama3", "llava-phi3", "bakllava",
-                    "moondream", "minicpm-v4.5", "magistral",
+                    "moondream", "minicpm-v4.5",
                     "granite3.3-vision", "gemma3-qat", "paligemma2", "smolvlm", "olmocr", "nemotron-nano-vl"]
 
 DEFAULTS = {
@@ -967,6 +967,8 @@ MESSAGES = {
                     "demande Ollama {need} ou plus récent (vous avez {have})"),
     "attn.ollama": ("Update Ollama to test {models}: they need Ollama {need} or newer (you have {have}).",
                     "Mettez à jour Ollama pour tester {models} : il faut Ollama {need} ou plus récent (vous avez {have})."),
+    "skip.no_tag": ("not in the registry", "absent du registre"),
+    "skip.no_fit": ("no size under the budget ({gb} GB)", "aucune taille sous le budget ({gb} Go)"),
     "skip.same": ("same model as {other}", "même modèle que {other}"),
     "note.http": ("{url}: HTTP {status}", "{url} : HTTP {status}"),
     "note.no_models": ("{url}: no model recognised (page changed?)", "{url} : aucun modèle reconnu (page changée ?)"),
@@ -2025,11 +2027,13 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
         tags = registry_tags(fam["name"], fetch)
         names = plausible_tags(tags) if tags is not None else probe_tags(fam["name"], fam.get("sizes") or (), manifest_fn)
         found = {}      # size -> best entry for that size
+        exists, seen_before = False, len(seen)
         for tag in names:
             model = f"{fam['name']}:{tag}"
             info = manifest_fn(fam["name"], tag)
             if not info:
                 continue
+            exists = True
             digest, size = info
             entry = {"model": model, "family": fam["name"], "digest": digest, "size": size,
                      "rank": -1 if fam["name"] == inc_family else fam["rank"], "source": fam["source"],
@@ -2052,6 +2056,9 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
                 found[key] = entry
         for key in sorted(found, reverse=True)[:d["per_family"]]:
             picked.append(found[key])
+        if not found and len(seen) == seen_before:     # say why the family gave nothing
+            why = _("skip.no_fit", gb=fmt(d["vram_budget_gb"] - 1)) if exists else _("skip.no_tag")
+            seen.append({"model": fam["name"], "family": fam["name"], "source": fam["source"], "skip": why})
     # Asked for explicitly (discovery.extra_models): before the families.
     for ref in extras if extras is not None else d["extra_models"]:
         name, tag = split_ref(ref)
@@ -2869,8 +2876,13 @@ def _run(run, dry, sleep, discover_fn):
         candidates.remove(cand)
         seen.append(dict(cand, skip=_("skip.same", other=installed[norm_digest(cand["digest"])])))
     run["discovery"] = {"picked": [{k: c[k] for k in ("model", "size", "source", "tier")} for c in candidates],
-                        "seen": seen[:40], "notes": notes}
+                        "seen": seen[:100], "notes": notes}
     log(f"{len(candidates)} candidate(s): " + (", ".join(c["model"] for c in candidates) or "none"))
+    by_reason = {}
+    for s in seen:
+        by_reason.setdefault(s["skip"], []).append(s["model"])
+    for why, models in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
+        log(f"set aside, {why} ({len(models)}): {', '.join(models)}")
     if dry:
         run["status"], run["message"] = "dry", _("run.dry")
         return
@@ -2915,7 +2927,7 @@ def _run(run, dry, sleep, discover_fn):
                 update_state(lambda st, k=f"{model}@{cand['digest']}", v=need:
                              st.setdefault("needs_ollama", {}).__setitem__(k, v))
                 seen.append(dict(cand, skip=_("skip.ollama", need=need, have=state["ollama_version"] or "?")))
-                run["discovery"]["seen"] = seen[:40]
+                run["discovery"]["seen"] = seen[:100]
                 _save_run(run)
                 if full_name(model) not in before:
                     delete_model(model)
