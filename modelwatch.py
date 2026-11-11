@@ -486,7 +486,10 @@ DEFAULT_FAMILIES = ["gemma4", "gemma3", "qwen3.5", "qwen3-vl", "qwen2.5vl",
                     "mistral-small3.2", "mistral-small3.1", "llama4", "llama3.2-vision",
                     "minicpm-v", "granite3.2-vision", "phi4-multimodal",
                     "glm4v", "glm-4.5v", "glm-4.1v", "internvl3.5", "internvl3", "kimi-vl",
-                    "deepseek-vl2"]
+                    "deepseek-vl2", "gemma3n", "ministral-3", "qwen3", "qwen3.6",
+                    "llava", "llava-llama3", "llava-phi3", "bakllava",
+                    "moondream", "minicpm-v4.5", "magistral",
+                    "granite3.3-vision", "gemma3-qat", "paligemma2", "smolvlm", "olmocr", "nemotron-nano-vl"]
 
 DEFAULTS = {
     "schedule": "1 04:00",
@@ -514,7 +517,8 @@ DEFAULTS = {
         "extra_models": [],
         "vram_budget_gb": 9.5,
         "max_download_gb": 12,
-        "max_candidates": 4,
+        "max_candidates": 12,
+        "per_family": 3,               # biggest fitting sizes tried per family
         "required_capabilities": ["completion", "vision"],
         "size_tags": ["4b", "e4b", "7b", "8b", "9b", "11b", "12b", "13b", "14b", "15b", "24b", "27b", "32b"],
         "tag_suffixes": ["", "-it-qat", "-qat", "-instruct", "-it-q4_K_M", "-q4_K_M"],
@@ -539,6 +543,7 @@ ENV_OVERRIDES = [
     ("MIN_PULLS", ("discovery", "min_pulls"), float), ("VRAM_BUDGET_GB", ("discovery", "vram_budget_gb"), float),
     ("MAX_DOWNLOAD_GB", ("discovery", "max_download_gb"), float),
     ("MAX_CANDIDATES", ("discovery", "max_candidates"), int),
+    ("PER_FAMILY", ("discovery", "per_family"), int),
     ("REQUIRED_CAPABILITIES", ("discovery", "required_capabilities"), list),
     ("OLLAMA_SITE", ("discovery", "site"), str), ("REGISTRY", ("discovery", "registry"), str),
     ("HF_REGISTRY", ("discovery", "hf_registry"), str),
@@ -684,7 +689,7 @@ def validate_config(cfg, base_dir):
                                 (("idle", "retry_minutes"), float, 0), (("idle", "max_hours"), float, 0),
                                 (("discovery", "min_pulls"), float, 0), (("discovery", "vram_budget_gb"), float, 0),
                                 (("discovery", "max_download_gb"), float, 0),
-                                (("discovery", "max_candidates"), int, 0),
+                                (("discovery", "max_candidates"), int, 0), (("discovery", "per_family"), int, 1),
                                 (("decision", "min_improvement"), float, None),
                                 (("decision", "max_regression"), float, 0),
                                 (("decision", "min_speed_ratio"), float, 0),
@@ -1953,13 +1958,13 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
         families.append({"name": inc_family, "caps": [], "sizes": [], "rank": 400, "source": "current family"})
     seen, picked = [], []
     for fam in sorted(families, key=lambda f: (f["name"] != inc_family, f["rank"])):
-        if len(picked) >= 3 * limit:
+        if len(picked) >= 3 * limit:  # enough to choose from
             break
         if not wants_family(fam):
             continue
         tags = registry_tags(fam["name"], fetch)
         names = plausible_tags(tags) if tags is not None else probe_tags(fam["name"], fam.get("sizes") or (), manifest_fn)
-        best = None
+        found = {}      # size -> best entry for that size
         for tag in names:
             model = f"{fam['name']}:{tag}"
             info = manifest_fn(fam["name"], tag)
@@ -1982,10 +1987,11 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
             elif reason:
                 seen.append(dict(entry, skip=reason))
                 continue
-            if best is None or (size_rank(tag), size) > (size_rank(best["model"].split(":")[1]), best["size"]):
-                best = entry
-        if best:
-            picked.append(best)
+            key = size_rank(tag)
+            if key not in found or size > found[key]["size"]:
+                found[key] = entry
+        for key in sorted(found, reverse=True)[:d["per_family"]]:
+            picked.append(found[key])
     # Asked for explicitly (discovery.extra_models): before the families.
     for ref in extras if extras is not None else d["extra_models"]:
         name, tag = split_ref(ref)
@@ -3718,7 +3724,7 @@ url: http://example.com/a#b
     configure(build_config({"ui": {"language": "fr"}}, environ={}))
     assert offload_reason(fit) == "89 % sur le GPU seulement (7,2 Go sur 8,1 Go, 9,6 Go libres avant chargement)"
     assert "1er du mois" in schedule_label("1 04:00")
-    configure(build_config({}, environ={}))
+    configure(build_config({"discovery": {"per_family": 1}}, environ={}))
 
     d = CFG["discovery"]
     pages = {d["search_pages"][0]: page("ollama-search-vision.html"), d["search_pages"][1]: page("ollama-library.html"),
@@ -3737,6 +3743,11 @@ url: http://example.com/a#b
     picked, seen, notes = discover(state, "h1", "gemma4:12b", fetch, man, limit=3)
     assert [c["model"] for c in picked] == ["gemma4:12b-it-qat", "qwen3.5:14b"], picked
     assert not notes
+    d["per_family"] = 3     # several sizes per family
+    picked, _seen, _n = discover(state, "h1", "gemma4:12b", fetch, man, limit=10)
+    models = [c["model"] for c in picked]
+    assert "gemma4:e4b" in models and "qwen3.5:4b" in models, models
+    d["per_family"] = 1
     state["results"]["qwen3.5:14b@d-qwen3.5-14b"] = {"case_hash": "h1"}
     state["ignored"]["gemma4:12b-it-qat"] = "d-gemma4-12b-it-qat"
     picked, seen, _n = discover(state, "h1", "gemma4:12b", fetch, man, limit=3)

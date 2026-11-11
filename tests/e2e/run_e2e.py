@@ -181,6 +181,7 @@ discovery:
   registry: http://127.0.0.1:{ports['registry']}
   hf_registry: http://127.0.0.1:{ports['registry']}
   max_candidates: 5
+  per_family: 1
   extra_models: [hf.co/a/vl:Q4_K_M]
 suites:
   - name: webapp
