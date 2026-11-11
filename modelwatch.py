@@ -963,6 +963,10 @@ MESSAGES = {
     "skip.too_big": ("too big ({gb} GB)", "trop gros ({gb} Go)"),
     "skip.ignored": ("ignored", "ignoré"),
     "skip.done": ("already evaluated on these cases", "déjà évalué sur ces cas"),
+    "skip.ollama": ("needs Ollama {need} or newer (you have {have})",
+                    "demande Ollama {need} ou plus récent (vous avez {have})"),
+    "attn.ollama": ("Update Ollama to test {models}: they need Ollama {need} or newer (you have {have}).",
+                    "Mettez à jour Ollama pour tester {models} : il faut Ollama {need} ou plus récent (vous avez {have})."),
     "skip.same": ("same model as {other}", "même modèle que {other}"),
     "note.http": ("{url}: HTTP {status}", "{url} : HTTP {status}"),
     "note.no_models": ("{url}: no model recognised (page changed?)", "{url} : aucun modèle reconnu (page changée ?)"),
@@ -1506,6 +1510,34 @@ class OllamaError(RuntimeError):
     pass
 
 
+_NEEDS_OLLAMA = re.compile(r"requires ollama version v?([0-9]+(?:\.[0-9]+)*)", re.I)
+
+
+def version_tuple(text):
+    """"v0.40.13" -> (0, 40, 13); () if unreadable."""
+    m = re.search(r"([0-9]+(?:\.[0-9]+)*)", str(text or ""))
+    return tuple(int(x) for x in m[1].split(".")) if m else ()
+
+
+def needs_newer(required, current):
+    """True when ``current`` is known and older than ``required``."""
+    req, cur = version_tuple(required), version_tuple(current)
+    return bool(req and cur and cur < req)
+
+
+def required_ollama(error):
+    """The Ollama version an error says a model needs, else None."""
+    m = _NEEDS_OLLAMA.search(str(error or ""))
+    return m[1] if m else None
+
+
+def ollama_version():
+    try:
+        return str(ollama("/api/version", timeout=10).get("version") or "") or None
+    except OllamaError:
+        return None
+
+
 def ollama_url():
     return CFG["ollama"]["url"]
 
@@ -1896,6 +1928,30 @@ def manifest(name, tag, fetch=None):
     return norm_digest(digest), size
 
 
+def model_requires(name, tag, fetch=None):
+    """Minimum Ollama version the model's config asks for ("requires"), or None."""
+    fetch = fetch or (lambda url: http_req(url, {"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
+                                           timeout=20))
+    url = manifest_url(name, tag)
+    status, _h, body = fetch(url)
+    if status != 200:
+        return None
+    try:
+        digest = (json.loads(body).get("config") or {}).get("digest")
+    except (ValueError, AttributeError):
+        return None
+    if not digest:
+        return None
+    status, _h, body = fetch(url.rsplit("/manifests/", 1)[0] + f"/blobs/{digest}")
+    if status != 200:
+        return None
+    try:
+        req = json.loads(body).get("requires")
+    except (ValueError, AttributeError):
+        return None
+    return str(req) if req else None
+
+
 def fits_budget(size_bytes, ceiling_gb=None):
     """Does it fit? File size + context (~0.7 GB) under the budget, and under
     the VRAM actually free as measured by previous runs."""
@@ -1933,6 +1989,10 @@ def skip_reason(state, case_hash, model, digest, size):
     key = f"{model}@{digest}"
     if state["ignored"].get(model) in (digest, "*"):
         return _("skip.ignored")
+    need = (state.get("needs_ollama") or {}).get(key)
+    have = state.get("ollama_version")
+    if need and (needs_newer(need, have) or not have):
+        return _("skip.ollama", need=need, have=have or "?")
     if key in state["intrinsic"]:
         return state["intrinsic"][key]["reason"]
     prev = state["results"].get(key)
@@ -2014,7 +2074,18 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
         else:
             picked.append(entry)
     picked.sort(key=lambda c: (c["tier"], c["rank"], -c["size"]))
-    return picked[:limit], seen, notes
+    # Too new for this Ollama: known before pulling, the next ones take the slot.
+    have, out = state.get("ollama_version"), []
+    for cand in picked:
+        if len(out) >= limit:
+            break
+        name, tag = split_ref(cand["model"])
+        need = model_requires(name, tag, fetch) if have else None
+        if need and needs_newer(need, have):
+            seen.append(dict(cand, skip=_("skip.ollama", need=need, have=have), need_ollama=need))
+            continue
+        out.append(cand)
+    return out, seen, notes
 
 
 # --- text helpers and scorers -----------------------------------------------------------
@@ -2781,7 +2852,13 @@ def _run(run, dry, sleep, discover_fn):
 
     _set_phase("discovery")
     state = load_state()
+    state["ollama_version"] = ollama_version()
     candidates, seen, notes = discover_fn(state, run["case_hash"], inc)
+    too_new = {}       # model -> Ollama version it needs
+    for s in seen:
+        need = s.get("need_ollama") or (state.get("needs_ollama") or {}).get(f"{s['model']}@{s.get('digest')}")
+        if need and needs_newer(need, state["ollama_version"]):
+            too_new[s["model"]] = need
     # Another name of an installed model (gemma4:12b-it-q4_K_M = gemma4:12b)
     # is not a candidate: same file, same result.
     try:
@@ -2830,6 +2907,19 @@ def _run(run, dry, sleep, discover_fn):
             res = evaluate_model(model, ctx, digest=cand["digest"], size=cand["size"],
                                  download=full_name(model) not in before)
         except OllamaError as exc:
+            need = required_ollama(exc)
+            if need:
+                # Not a verdict on the model: retried once Ollama is updated.
+                log(f"{model}: needs Ollama {need} or newer, skipped")
+                too_new[model] = need
+                update_state(lambda st, k=f"{model}@{cand['digest']}", v=need:
+                             st.setdefault("needs_ollama", {}).__setitem__(k, v))
+                seen.append(dict(cand, skip=_("skip.ollama", need=need, have=state["ollama_version"] or "?")))
+                run["discovery"]["seen"] = seen[:40]
+                _save_run(run)
+                if full_name(model) not in before:
+                    delete_model(model)
+                continue
             res = {"model": model, "digest": cand["digest"], "size": cand["size"], "suites": {},
                    "case_hash": run["case_hash"], "evaluated_at": time.time(), "reason": _("why.error", err=exc)}
         res["verdict"], res["reason"] = verdict(inc_res, res)
@@ -2854,6 +2944,9 @@ def _run(run, dry, sleep, discover_fn):
         elif full_name(model) not in before:
             delete_model(model)
 
+    if too_new:
+        attention.append(_("attn.ollama", models=", ".join(too_new), need=max(too_new.values(), key=version_tuple),
+                           have=state["ollama_version"] or "?"))
     if best:
         rec = {"model": best["model"], "digest": best.get("digest"), "total": best["compare"]["total"],
                "incumbent": inc, "incumbent_total": best["compare"]["incumbent_total"],
@@ -3748,6 +3841,31 @@ url: http://example.com/a#b
     models = [c["model"] for c in picked]
     assert "gemma4:e4b" in models and "qwen3.5:4b" in models, models
     d["per_family"] = 1
+    # Too new for this Ollama: skipped before pulling, the next one takes the slot.
+    assert version_tuple("v0.40.13") == (0, 40, 13) and needs_newer("0.40.13", "0.40.10")
+    assert not needs_newer("0.40.13", "0.41.0") and not needs_newer("0.40.13", None)
+    assert required_ollama("model requires ollama version v0.40.13 or newer (current version is v0.40.10)") == "0.40.13"
+    qurl = manifest_url("qwen3.5", "14b")
+
+    def fetch_req(url):
+        if url == qurl:
+            return 200, {}, json.dumps({"config": {"digest": "sha256:cfg"}}).encode()
+        if url == qurl.rsplit("/manifests/", 1)[0] + "/blobs/sha256:cfg":
+            return 200, {}, b'{"requires": "0.40.13"}'
+        return fetch(url)
+    st_new = {"ignored": {}, "intrinsic": {}, "results": {}, "ollama_version": "0.40.10"}
+    picked, seen, _n = discover(st_new, "h1", "gemma4:12b", fetch_req, man, limit=3)
+    assert "qwen3.5:14b" not in [c["model"] for c in picked], picked
+    assert any(x["model"] == "qwen3.5:14b" and x.get("need_ollama") == "0.40.13" for x in seen), seen
+    st_new["ollama_version"] = "0.40.13"
+    picked, seen, _n = discover(st_new, "h1", "gemma4:12b", fetch_req, man, limit=3)
+    assert "qwen3.5:14b" in [c["model"] for c in picked], picked
+    # Remembered after a failed pull, retried once Ollama is updated.
+    st_new["needs_ollama"] = {"x:1b@d": "0.40.13"}
+    st_new["ollama_version"] = "0.40.10"
+    assert "0.40.13" in skip_reason(st_new, "h1", "x:1b", "d", GIB)
+    st_new["ollama_version"] = "0.41.0"
+    assert skip_reason(st_new, "h1", "x:1b", "d", GIB) is None
     state["results"]["qwen3.5:14b@d-qwen3.5-14b"] = {"case_hash": "h1"}
     state["ignored"]["gemma4:12b-it-qat"] = "d-gemma4-12b-it-qat"
     picked, seen, _n = discover(state, "h1", "gemma4:12b", fetch, man, limit=3)
