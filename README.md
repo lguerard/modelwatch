@@ -103,7 +103,7 @@ A run (the 1st of the month at 04:00 by default):
    first, then curated families, then ollama.com (most pulled first, at
    least `min_pulls`). The size comes from the registry manifest; a model
    must weigh at most `vram_budget_gb` − 1 GB and `max_download_gb`.
-   `max_candidates` per run; already-scored ones (same digest, same cases),
+   `max_candidates` per run (up to `per_family` sizes of each family); already-scored ones (same digest, same cases),
    ignored ones and models that did not fit before are skipped.
 5. **Evaluates each candidate**: pull; check its capabilities
    (`required_capabilities`, e.g. vision); unload everything, load it alone
@@ -163,7 +163,8 @@ discovery:
   extra_models: []           # e.g. [hf.co/org/repo-GGUF:Q4_K_M, name:tag]
   vram_budget_gb: 9.5
   max_download_gb: 12
-  max_candidates: 4
+  max_candidates: 12
+  per_family: 3              # biggest fitting sizes tried per family
   required_capabilities: [completion, vision]   # [completion] for text-only apps
 
 suites: []                   # see Suites

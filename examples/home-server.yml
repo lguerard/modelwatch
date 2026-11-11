@@ -43,7 +43,8 @@ idle:
 discovery:
   vram_budget_gb: 9.5           # RTX 3080, 10 GB, shared with Frigate and Immich
   max_download_gb: 12
-  max_candidates: 4
+  max_candidates: 12
+  per_family: 3              # biggest fitting sizes tried per family
   min_pulls: 20000
   extra_models: []              # e.g. hf.co/<author>/<repo>:Q4_K_M (MODELWATCH_EXTRA_MODELS)
   required_capabilities: [completion, vision]   # Paperless and Tricouture read images
