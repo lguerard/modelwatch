@@ -513,11 +513,17 @@ DEFAULTS = {
         "site": "https://ollama.com",
         "registry": "https://registry.ollama.ai",
         "hf_registry": "https://hf.co",
-        "min_pulls": 20000,
+        "search_page_count": 4,        # pages read per ollama.com list
+        "min_pulls": 2000,
+        # GGUF repositories on Hugging Face, most downloaded first (0 = off).
+        "hf_search": 60,
+        "hf_api": "https://huggingface.co",
+        "hf_min_downloads": 1000,
+        "hf_quants": ["Q4_K_M", "Q4_K_S", "IQ4_XS", "Q4_0"],
         "extra_models": [],
         "vram_budget_gb": 9.5,
         "max_download_gb": 12,
-        "max_candidates": 12,
+        "max_candidates": 20,
         "per_family": 3,               # biggest fitting sizes tried per family
         "required_capabilities": ["completion", "vision"],
         "size_tags": ["4b", "e4b", "7b", "8b", "9b", "11b", "12b", "13b", "14b", "15b", "24b", "27b", "32b"],
@@ -547,6 +553,7 @@ ENV_OVERRIDES = [
     ("REQUIRED_CAPABILITIES", ("discovery", "required_capabilities"), list),
     ("OLLAMA_SITE", ("discovery", "site"), str), ("REGISTRY", ("discovery", "registry"), str),
     ("HF_REGISTRY", ("discovery", "hf_registry"), str),
+    ("HF_SEARCH", ("discovery", "hf_search"), int),
     ("MIN_IMPROVEMENT", ("decision", "min_improvement"), float),
     ("MAX_REGRESSION", ("decision", "max_regression"), float),
     ("MIN_SPEED_RATIO", ("decision", "min_speed_ratio"), float),
@@ -687,7 +694,9 @@ def validate_config(cfg, base_dir):
     cfg["schedule"] = str(cfg["schedule"])
     for path, kind, minimum in [(("port",), int, 1), (("max_cases",), int, 1), (("ollama", "num_ctx"), int, 256),
                                 (("idle", "retry_minutes"), float, 0), (("idle", "max_hours"), float, 0),
-                                (("discovery", "min_pulls"), float, 0), (("discovery", "vram_budget_gb"), float, 0),
+                                (("discovery", "min_pulls"), float, 0),
+                                (("discovery", "search_page_count"), int, 1), (("discovery", "hf_search"), int, 0),
+                                (("discovery", "hf_min_downloads"), float, 0), (("discovery", "vram_budget_gb"), float, 0),
                                 (("discovery", "max_download_gb"), float, 0),
                                 (("discovery", "max_candidates"), int, 0), (("discovery", "per_family"), int, 1),
                                 (("decision", "min_improvement"), float, None),
@@ -715,10 +724,10 @@ def validate_config(cfg, base_dir):
     if gm["mode"] == "docker":
         gm["container"] = _check_selector(gm.get("container"), "ollama.gpu_memory.container")
     d = cfg["discovery"]
-    for key in ("families", "extra_models", "required_capabilities", "size_tags", "tag_suffixes"):
+    for key in ("families", "extra_models", "required_capabilities", "size_tags", "tag_suffixes", "hf_quants"):
         d[key] = _str_list(d[key], f"discovery.{key}") if key != "tag_suffixes" else [
             str(x) for x in (d[key] or [""])]
-    for key in ("site", "registry", "hf_registry"):
+    for key in ("site", "registry", "hf_registry", "hf_api"):
         d[key] = str(d[key]).rstrip("/")
     if d["search_pages"] is None:
         cat = "vision" if "vision" in d["required_capabilities"] else None
@@ -1794,6 +1803,81 @@ def _page_category(url):
     return (urllib.parse.parse_qs(urllib.parse.urlparse(url).query).get("c") or [None])[0]
 
 
+def _page_url(url, page):
+    return url if page == 1 else url + ("&" if "?" in url else "?") + f"page={page}"
+
+
+def _site_pages(fetch, notes):
+    """(list url, position of its first model, models) for each page read.
+
+    Pages after the first stop as soon as one brings no new model (or the
+    site ignores the page number): never worse than one page.
+    """
+    d = CFG["discovery"]
+    for url in d["search_pages"]:
+        names, pos = set(), 0
+        for page in range(1, d["search_page_count"] + 1):
+            status, _h, body = fetch(_page_url(url, page))
+            if status != 200:
+                if page == 1:
+                    notes.append(_("note.http", url=url, status=status or "—"))
+                break
+            found = parse_library_html(body.decode(errors="replace"))
+            new = [f for f in found if f["name"] not in names]
+            if not new:
+                if page == 1:
+                    notes.append(_("note.no_models", url=url))
+                break
+            names.update(f["name"] for f in new)
+            yield url, pos, new
+            pos += len(new)
+
+
+_HF_PARAMS = re.compile(r"(?<![a-z0-9])(\d+(?:\.\d+)?)b(?![a-z])", re.I)
+
+
+def hf_families(fetch, notes):
+    """GGUF repositories on Hugging Face, most downloaded first: one per base model."""
+    d = CFG["discovery"]
+    if not d["hf_search"]:
+        return []
+    vision = "vision" in d["required_capabilities"]
+    pipeline = "image-text-to-text" if vision else "text-generation"
+    url = (f"{d['hf_api']}/api/models?library=gguf&pipeline_tag={pipeline}&sort=downloads&direction=-1"
+           f"&limit={int(d['hf_search']) * 3}")
+    status, _h, body = fetch(url)
+    if status != 200:
+        notes.append(_("note.http", url=url, status=status or "—"))
+        return []
+    try:
+        items = json.loads(body)
+    except ValueError:
+        items = None
+    if not isinstance(items, list):
+        notes.append(_("note.no_models", url=url))
+        return []
+    out, bases = [], set()
+    for item in items:
+        repo = str(item.get("id") or item.get("modelId") or "")
+        if "/" not in repo or (item.get("downloads") or 0) < d["hf_min_downloads"]:
+            continue
+        tags = [str(t) for t in item.get("tags") or []]
+        base = next((t.split(":")[-1] for t in tags if t.startswith("base_model:")), None) \
+            or re.sub(r"[-_.]gguf$", "", repo.split("/")[1], flags=re.I)
+        base = base.lower()
+        if base in bases:          # the same model quantized by someone else
+            continue
+        m = _HF_PARAMS.search(repo.split("/")[1])
+        if m and float(m[1]) * 0.45 > d["vram_budget_gb"]:     # too big even at 4 bits
+            continue
+        bases.add(base)
+        out.append({"name": f"hf.co/{repo}", "caps": ["vision"] if vision else [], "sizes": [],
+                    "pulls": item.get("downloads"), "source": "huggingface"})
+        if len(out) >= d["hf_search"]:
+            break
+    return out
+
+
 def discover_families(fetch=None):
     """[{name, caps, sizes, rank, source}]: curated families first, then the
     ollama.com pages, most pulled first.
@@ -1807,16 +1891,9 @@ def discover_families(fetch=None):
     for i, name in enumerate(d["families"]):
         families[name] = {"name": name, "caps": [], "sizes": [], "pulls": None, "rank": i, "source": "curated"}
     site = {}
-    for url in d["search_pages"]:
-        status, _h, body = fetch(url)
-        if status != 200:
-            notes.append(_("note.http", url=url, status=status or "—"))
-            continue
-        found = parse_library_html(body.decode(errors="replace"))
-        if not found:
-            notes.append(_("note.no_models", url=url))
+    for url, pos0, found in _site_pages(fetch, notes):
         cat = _page_category(url)
-        for pos, item in enumerate(found[:60]):
+        for pos, item in enumerate(found, pos0):
             caps = item["caps"]
             if cat and cat not in caps:          # the page is filtered on this capability
                 caps = caps + [cat]
@@ -1838,7 +1915,10 @@ def discover_families(fetch=None):
     ordered = sorted((f for f in families.values() if f["source"] != "curated"),
                      key=lambda f: (-(f.get("pulls") or 0), f.get("pos", 0)))
     for i, fam in enumerate(ordered):
-        fam["rank"] = 100 + i
+        fam["rank"] = 100 + 2 * i
+    # Interleaved with ollama.com, each by its own popularity.
+    for i, fam in enumerate(hf_families(fetch, notes)):
+        families.setdefault(fam["name"], dict(fam, rank=101 + 2 * i))
     return list(families.values()), notes
 
 
@@ -1881,7 +1961,7 @@ def plausible_tags(tags):
     the heavy quantizations (fp16, q8_0...) that would not fit anyway."""
     keep = [t for t in tags if t != "latest" and not _QUANT_HEAVY.search(t)
             and re.match(r"^(e?\d+(\.\d+)?b|\d+x\d+b)", t)]
-    return keep[:40]
+    return keep[:80]
 
 
 def probe_tags(name, sizes, manifest_fn):
@@ -2020,15 +2100,21 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
         families.append({"name": inc_family, "caps": [], "sizes": [], "rank": 400, "source": "current family"})
     seen, picked = [], []
     for fam in sorted(families, key=lambda f: (f["name"] != inc_family, f["rank"])):
-        if len(picked) >= 3 * limit:  # enough to choose from
+        if len({c["family"] for c in picked}) >= 3 * limit:  # enough different models to choose from
             break
         if not wants_family(fam):
             continue
-        tags = registry_tags(fam["name"], fetch)
-        names = plausible_tags(tags) if tags is not None else probe_tags(fam["name"], fam.get("sizes") or (), manifest_fn)
+        if fam.get("source") == "huggingface":
+            names = d["hf_quants"]
+        else:
+            tags = registry_tags(fam["name"], fetch)
+            names = plausible_tags(tags) if tags is not None else probe_tags(fam["name"], fam.get("sizes") or (),
+                                                                              manifest_fn)
         found = {}      # size -> best entry for that size
         exists, seen_before = False, len(seen)
         for tag in names:
+            if size_rank(tag) * 0.3 > d["vram_budget_gb"]:      # too big even at 2 bits: no request
+                continue
             model = f"{fam['name']}:{tag}"
             info = manifest_fn(fam["name"], tag)
             if not info:
@@ -2054,8 +2140,10 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
             key = size_rank(tag)
             if key not in found or size > found[key]["size"]:
                 found[key] = entry
-        for key in sorted(found, reverse=True)[:d["per_family"]]:
-            picked.append(found[key])
+            if fam.get("source") == "huggingface":
+                break                     # quantizations in order of preference
+        for nth, key in enumerate(sorted(found, reverse=True)[:d["per_family"]]):
+            picked.append(dict(found[key], nth=nth))
         if not found and len(seen) == seen_before:     # say why the family gave nothing
             why = _("skip.no_fit", gb=fmt(d["vram_budget_gb"] - 1)) if exists else _("skip.no_tag")
             seen.append({"model": fam["name"], "family": fam["name"], "source": fam["source"], "skip": why})
@@ -2080,7 +2168,8 @@ def discover(state, case_hash, incumbent, fetch=None, manifest_fn=None, limit=No
             seen.append(dict(entry, skip=skip))
         else:
             picked.append(entry)
-    picked.sort(key=lambda c: (c["tier"], c["rank"], -c["size"]))
+    # Different models first: every family's biggest size before second sizes.
+    picked.sort(key=lambda c: (c["tier"], c.get("nth", 0), c["rank"], -c["size"]))
     # Too new for this Ollama: known before pulling, the next ones take the slot.
     have, out = state.get("ollama_version"), []
     for cand in picked:
@@ -3829,7 +3918,7 @@ url: http://example.com/a#b
     configure(build_config({"ui": {"language": "fr"}}, environ={}))
     assert offload_reason(fit) == "89 % sur le GPU seulement (7,2 Go sur 8,1 Go, 9,6 Go libres avant chargement)"
     assert "1er du mois" in schedule_label("1 04:00")
-    configure(build_config({"discovery": {"per_family": 1}}, environ={}))
+    configure(build_config({"discovery": {"per_family": 1, "hf_search": 0}}, environ={}))
 
     d = CFG["discovery"]
     pages = {d["search_pages"][0]: page("ollama-search-vision.html"), d["search_pages"][1]: page("ollama-library.html"),
@@ -3878,6 +3967,40 @@ url: http://example.com/a#b
     assert "0.40.13" in skip_reason(st_new, "h1", "x:1b", "d", GIB)
     st_new["ollama_version"] = "0.41.0"
     assert skip_reason(st_new, "h1", "x:1b", "d", GIB) is None
+    # ollama.com lists read page after page, until a page brings nothing new.
+    lst = d["search_pages"][0]
+    blk = '<li x-test-model><a href="/library/{0}">{0}</a></li>'
+    paged = {lst: blk.format("m1") + blk.format("m2"), _page_url(lst, 2): blk.format("m3"),
+             _page_url(lst, 3): blk.format("m3")}
+    got = [(pos, [f["name"] for f in found]) for u, pos, found in
+           _site_pages(lambda u: (200, {}, paged[u].encode()) if u in paged else (404, {}, b""), [])
+           if u == lst]
+    assert got == [(0, ["m1", "m2"]), (2, ["m3"])], got
+    # Hugging Face: most downloaded GGUF repos, one per base model, not too big.
+    d["hf_search"] = 5
+    hf_list = [{"id": "a/vl-7B-GGUF", "downloads": 9000, "tags": ["base_model:quantized:org/VL-7B"]},
+               {"id": "b/VL-7B-GGUF", "downloads": 8000, "tags": ["base_model:quantized:org/VL-7B"]},
+               {"id": "c/huge-72B-GGUF", "downloads": 7000, "tags": []},
+               {"id": "d/tiny-2b-gguf", "downloads": 50, "tags": []},
+               {"id": "e/small-4B-GGUF", "downloads": 3000, "tags": []}]
+
+    def fetch_hf(url):
+        if url.startswith(d["hf_api"] + "/api/models?"):
+            assert "pipeline_tag=image-text-to-text" in url and "library=gguf" in url, url
+            return 200, {}, json.dumps(hf_list).encode()
+        return fetch(url)
+    fams = hf_families(fetch_hf, [])
+    assert [f["name"] for f in fams] == ["hf.co/a/vl-7B-GGUF", "hf.co/e/small-4B-GGUF"], fams
+    sizes.update({"hf.co/a/vl-7B-GGUF:Q4_K_M": 4.5, "hf.co/e/small-4B-GGUF:IQ4_XS": 2.2})
+    d["per_family"] = 3
+    picked, seen, _n = discover({"ignored": {}, "intrinsic": {}, "results": {}}, "h1", "gemma4:12b",
+                                fetch_hf, man, limit=20)
+    models = [c["model"] for c in picked]
+    assert "hf.co/a/vl-7B-GGUF:Q4_K_M" in models and "hf.co/e/small-4B-GGUF:IQ4_XS" in models, models
+    # Every family's first size before any family's second size.
+    firsts = [c.get("nth", 0) for c in picked]
+    assert firsts == sorted(firsts), picked
+    d["per_family"], d["hf_search"] = 1, 0
     state["results"]["qwen3.5:14b@d-qwen3.5-14b"] = {"case_hash": "h1"}
     state["ignored"]["gemma4:12b-it-qat"] = "d-gemma4-12b-it-qat"
     picked, seen, _n = discover(state, "h1", "gemma4:12b", fetch, man, limit=3)
