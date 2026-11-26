@@ -37,7 +37,9 @@ and only bothers you when one is clearly better. Then you switch every app
   run (nvfp4, fp8, mlx) and other names of a model you have are skipped.
 - **Never in the way.** Waits until the GPU is idle (nothing loaded in
   Ollama, plus your own "busy" probes), never deletes a model you had,
-  deletes the candidates it pulled once scored.
+  deletes the candidates it pulled once scored. It remembers what it
+  downloaded, so a run cut short, an ignored recommendation or one replaced
+  by a better one is cleaned up too; an adopted model is yours and stays.
 - **One-tap switch from ntfy.** **Adopt**, **Details** and **Ignore**
   buttons on signed, single-use, expiring links. Adopt edits your apps'
   `.env` files and recreates their services with their own compose files,
@@ -100,11 +102,16 @@ A run (the 1st of the month at 04:00 by default):
    `.env` file, else `current_model`. Warns when your apps disagree.
 3. **Counts the cases** of every suite (a *dry run*: no model called).
 4. **Discovers candidates**: your extra models and your current family
-   first, then curated families, then ollama.com (most pulled first, at
-   least `min_pulls`). The size comes from the registry manifest; a model
-   must weigh at most `vram_budget_gb` − 1 GB and `max_download_gb`.
-   `max_candidates` per run (up to `per_family` sizes of each family); already-scored ones (same digest, same cases),
-   ignored ones and models that did not fit before are skipped.
+   first, then curated families, then ollama.com (`search_page_count`
+   pages of each list, most pulled first, at least `min_pulls`) interleaved
+   with the most downloaded GGUF repositories on Hugging Face (`hf_search`,
+   one per base model, at least `hf_min_downloads`). The size comes from
+   the registry manifest; a model must weigh at most `vram_budget_gb` − 1 GB
+   and `max_download_gb`. `max_candidates` per run, different models first:
+   every family's biggest size before any second size (up to `per_family`
+   sizes). Already-scored ones (same digest, same cases), ignored ones and
+   models that did not fit before are skipped; the log says why each one
+   was set aside.
    Models that need a newer Ollama than yours are skipped before any
    download (the next ones take their place) and you are told to update;
    they are tried again once Ollama is updated.
@@ -162,11 +169,15 @@ idle:
 discovery:
   families: [gemma4, gemma3, qwen3.5, qwen3-vl, …]   # curated (default list in modelwatch.py)
   search_pages: null         # default: ollama.com newest + popular, vision-filtered if vision is required
-  min_pulls: 20000
+  search_page_count: 4       # pages read per ollama.com list
+  min_pulls: 2000
+  hf_search: 60              # Hugging Face GGUF repositories looked at (0 = off)
+  hf_min_downloads: 1000
+  hf_quants: [Q4_K_M, Q4_K_S, IQ4_XS, Q4_0]   # first one found is used
   extra_models: []           # e.g. [hf.co/org/repo-GGUF:Q4_K_M, name:tag]
   vram_budget_gb: 9.5
   max_download_gb: 12
-  max_candidates: 12
+  max_candidates: 20
   per_family: 3              # biggest fitting sizes tried per family
   required_capabilities: [completion, vision]   # [completion] for text-only apps
 
