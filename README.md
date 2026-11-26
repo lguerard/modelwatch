@@ -37,7 +37,9 @@ and only bothers you when one is clearly better. Then you switch every app
   run (nvfp4, fp8, mlx) and other names of a model you have are skipped.
 - **Never in the way.** Waits until the GPU is idle (nothing loaded in
   Ollama, plus your own "busy" probes), never deletes a model you had,
-  deletes the candidates it pulled once scored.
+  deletes the candidates it pulled once scored. It remembers what it
+  downloaded, so a run cut short, an ignored recommendation or one replaced
+  by a better one is cleaned up too; an adopted model is yours and stays.
 - **One-tap switch from ntfy.** **Adopt**, **Details** and **Ignore**
   buttons on signed, single-use, expiring links. Adopt edits your apps'
   `.env` files and recreates their services with their own compose files,

@@ -1056,7 +1056,7 @@ def _migrate_result(res):
 
 
 def migrate_state(state):
-    for key in ("results", "intrinsic", "ignored", "used"):
+    for key in ("results", "intrinsic", "ignored", "used", "pulled"):
         state.setdefault(key, {})
     for key in ("runs", "adoptions"):
         state.setdefault(key, [])
@@ -1634,7 +1634,49 @@ def delete_model(model):
         ollama("/api/delete", {"model": model}, method="DELETE", timeout=120)
         log(f"{model} deleted")
     except OllamaError as exc:
-        log(f"cannot delete {model}: {exc}")
+        if "not found" not in str(exc).lower():
+            log(f"cannot delete {model}: {exc}")
+            return False
+    update_state(lambda st: (st.get("pulled") or {}).pop(full_name(model), None))
+    return True
+
+
+def mark_pulled(model):
+    """Downloaded by modelwatch: deleted once no longer needed, even after a crash."""
+    update_state(lambda st: st.setdefault("pulled", {}).__setitem__(full_name(model), time.time()))
+
+
+def models_in_use(state):
+    """What must stay: the models your apps use and a pending recommendation."""
+    keep = {full_name(m) for keys in target_models().values() for m in keys.values() if m}
+    keep |= {full_name(m) for m in (CFG["current_model"],) if m}
+    rec = state.get("recommendation") or {}
+    if rec.get("status") == "pending" and rec.get("model"):
+        keep.add(full_name(rec["model"]))
+    return keep
+
+
+def cleanup_pulled():
+    """Delete what modelwatch downloaded and no longer needs: left by a run
+    that crashed, or a recommendation ignored or replaced since. Never a
+    model it did not download itself, never one your apps use."""
+    state = load_state()
+    pulled = state.get("pulled") or {}
+    if not pulled:
+        return []
+    try:
+        installed = local_models()
+    except OllamaError:
+        return []
+    keep, done = models_in_use(state), []
+    for model in list(pulled):
+        if model in keep:
+            continue
+        if model not in installed:
+            update_state(lambda st, m=model: (st.get("pulled") or {}).pop(m, None))
+        elif delete_model(model):
+            done.append(model)
+    return done
 
 
 def chat(model, messages, num_predict, schema=None, timeout=600, options=None):
@@ -2936,6 +2978,9 @@ def _run(run, dry, sleep, discover_fn):
         return
     div = divergences(models, inc)
     run.update(incumbent=inc, divergence=div)
+    if not dry:
+        for m in cleanup_pulled():
+            log(f"{m}: left over by an earlier run, deleted")
     if div:
         log("different models: " + ", ".join(div))
 
@@ -3004,6 +3049,8 @@ def _run(run, dry, sleep, discover_fn):
     for cand in candidates:
         model = cand["model"]
         _set_phase("evaluating", model)
+        if full_name(model) not in before:
+            mark_pulled(model)
         try:
             res = evaluate_model(model, ctx, digest=cand["digest"], size=cand["size"],
                                  download=full_name(model) not in before)
@@ -3056,6 +3103,7 @@ def _run(run, dry, sleep, discover_fn):
         run["recommendation"] = best["model"]
         run["status"] = "recommended"
         run["message"] = _("run.recommended", model=best["model"], delta=signed(best["compare"]["delta"]))
+        cleanup_pulled()          # the recommendation this one replaces
         announce(best, inc_res, attention)
     else:
         run["status"] = "no_winner"
@@ -3181,6 +3229,8 @@ def run_adopt(model, source="ui", rollback=False):
             rec = st.get("recommendation") or {}
             if not rollback and full_name(rec.get("model", "")) == full_name(model):
                 rec["status"] = "adopted"
+            if entry["ok"]:
+                (st.get("pulled") or {}).pop(full_name(model), None)    # in use now: never deleted
             if rollback and entry["ok"] and old:
                 st["ignored"][old] = local_digest(old) or "*"
         update_state(write)
@@ -3218,6 +3268,7 @@ def ignore_model(model, digest=""):
             rec["status"] = "ignored"
     update_state(write)
     log(f"{model} ignored")
+    cleanup_pulled()
 
 
 def rollback_target(state):
@@ -3862,6 +3913,29 @@ url: http://example.com/a#b
             st = load_state()
             assert st["ignored"]["qwen3.5:14b"] == "d2" and rollback_target(st) is None
             assert sent[-1][1]["event"] == "reverted"
+            # Clean-up of what modelwatch pulled: only its own downloads, never a
+            # model in use or a pending recommendation; adopted ones are yours.
+            assert "qwen3.5:14b" not in load_state()["pulled"]
+            installed = {"gemma4:12b": "d1", "qwen3.5:14b": "d2", "left:1b": "d3", "rec:4b": "d4", "mine:7b": "d5"}
+            deleted, real_ollama = [], globals()["ollama"]
+
+            def fake_ollama(path, body=None, method=None, timeout=60):
+                assert path == "/api/delete" and method == "DELETE"
+                deleted.append(body["model"])
+                installed.pop(body["model"], None)
+                return {}
+            globals().update(local_models=lambda: dict(installed), ollama=fake_ollama)
+            try:
+                for m in ("left:1b", "rec:4b", "gone:2b", "gemma4:12b"):
+                    mark_pulled(m)
+                update_state(lambda st: st.__setitem__("recommendation", {"model": "rec:4b", "status": "pending"}))
+                assert cleanup_pulled() == ["left:1b"], deleted      # crashed run's leftover
+                assert set(load_state()["pulled"]) == {"rec:4b", "gemma4:12b"}, load_state()["pulled"]
+                ignore_model("rec:4b")                                # ignored: deleted at once
+                assert deleted == ["left:1b", "rec:4b"] and "mine:7b" in installed and "gemma4:12b" in installed
+                assert set(load_state()["pulled"]) == {"gemma4:12b"}   # in use by your apps: kept
+            finally:
+                globals()["ollama"] = real_ollama
         finally:
             globals().update(real)
     assert full_name("gemma4") == "gemma4:latest" and full_name("a/b:c") == "a/b:c"

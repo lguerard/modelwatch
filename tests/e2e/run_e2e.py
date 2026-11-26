@@ -315,6 +315,8 @@ def run(tmp, procs):
     check(sorted(pulled) == sorted(picked), "every candidate was pulled")
     check(sorted(deleted) == sorted(set(picked) - {"qwen3.5:14b"}), "rejected candidates deleted, winner kept")
     check("gemma4:12b" not in deleted, "the current model is never deleted")
+    check(set(json.load(open(os.path.join(tmp, "data", "state.json")))["pulled"]) == {"qwen3.5:14b"},
+          "only the recommended candidate is still tracked as pulled")
     calls = [json.loads(line) for line in open(os.path.join(tmp, "docker.log"))]
     check(any(c[:2] == ["exec", "-e"] and "APP_ENV=e2e" in c for c in calls), "exec suite gets its env")
     check(any(c[:1] == ["top"] for c in calls) and any("echo 0" in c for c in calls), "idle probes ran")
